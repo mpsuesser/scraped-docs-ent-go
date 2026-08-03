@@ -1,0 +1,1156 @@
+---
+url: https://entgo.io/docs/schema-edges
+title: "Schema Edges"
+description: ""
+access_date: 2026-08-03T17:26:33.758Z
+current_date: 2026-08-03T17:26:33.758Z
+---
+
+## Quick Summary
+
+Edges are the relations (or associations) of entities. For example, user's pets, or group's users:
+
+In the example above, you can see 2 relations declared using edges. Let's go over them.
+
+1\. `pets` / `owner` edges; user's pets and pet's owner:
+
+```markdown
+package schema
+
+import (
+    "entgo.io/ent"
+    "entgo.io/ent/schema/edge"
+)
+
+// User schema.
+type User struct {
+    ent.Schema
+}
+
+// Fields of the user.
+func (User) Fields() []ent.Field {
+    return []ent.Field{
+        // ...
+    }
+}
+
+// Edges of the user.
+func (User) Edges() []ent.Edge {
+    return []ent.Edge{
+        edge.To("pets", Pet.Type),
+    }
+}
+```
+
+As you can see, a `User` entity can **have many** pets, but a `Pet` entity can **have only one** owner.  
+In relationship definition, the `pets` edge is a *O2M* (one-to-many) relationship, and the `owner` edge is a *M2O* (many-to-one) relationship.
+
+The `User` schema **owns** the `pets/owner` relationship because it uses `edge.To`, and the `Pet` schema just has a back-reference to it, declared using `edge.From` with the `Ref` method.
+
+The `Ref` method describes which edge of the `User` schema we're referencing because there can be multiple references from one schema to other.
+
+The cardinality of the edge/relationship can be controlled using the `Unique` method, and it's explained more widely below.
+
+2\. `users` / `groups` edges; group's users and user's groups:
+
+- Group
+- User
+
+```markdown
+package schema
+
+import (
+    "entgo.io/ent"
+    "entgo.io/ent/schema/edge"
+)
+
+// Group schema.
+type Group struct {
+    ent.Schema
+}
+
+// Fields of the group.
+func (Group) Fields() []ent.Field {
+    return []ent.Field{
+        // ...
+    }
+}
+
+// Edges of the group.
+func (Group) Edges() []ent.Edge {
+    return []ent.Edge{
+        edge.To("users", User.Type),
+    }
+}
+```
+
+As you can see, a Group entity can **have many** users, and a User entity can have **have many** groups.  
+In relationship definition, the `users` edge is a *M2M* (many-to-many) relationship, and the `groups` edge is also a *M2M* (many-to-many) relationship.
+
+## To and From
+
+`edge.To` and `edge.From` are the 2 builders for creating edges/relations.
+
+A schema that defines an edge using the `edge.To` builder owns the relation, unlike using the `edge.From` builder that gives only a back-reference for the relation (with a different name).
+
+Let's go over a few examples that show how to define different relation types using edges.
+
+## Relationship
+
+## O2O Two Types
+
+In this example, a user **has only one** credit-card, and a card **has only one** owner.
+
+The `User` schema defines an `edge.To` card named `card`, and the `Card` schema defines a back-reference to this edge using `edge.From` named `owner`.
+
+- User
+- Card
+
+```markdown
+// Edges of the user.
+func (User) Edges() []ent.Edge {
+    return []ent.Edge{
+        edge.To("card", Card.Type).
+            Unique(),
+    }
+}
+```
+
+The API for interacting with these edges is as follows:
+
+```markdown
+func Do(ctx context.Context, client *ent.Client) error {
+    a8m, err := client.User.
+        Create().
+        SetAge(30).
+        SetName("Mashraki").
+        Save(ctx)
+    if err != nil {
+        return fmt.Errorf("creating user: %w", err)
+    }
+    log.Println("user:", a8m)
+    card1, err := client.Card.
+        Create().
+        SetOwner(a8m).
+        SetNumber("1020").
+        SetExpired(time.Now().Add(time.Minute)).
+        Save(ctx)
+    if err != nil {
+        return fmt.Errorf("creating card: %w", err)
+    }
+    log.Println("card:", card1)
+    // Only returns the card of the user,
+    // and expects that there's only one.
+    card2, err := a8m.QueryCard().Only(ctx)
+    if err != nil {
+        return fmt.Errorf("querying card: %w", err)
+    }
+    log.Println("card:", card2)
+    // The Card entity is able to query its owner using
+    // its back-reference.
+    owner, err := card2.QueryOwner().Only(ctx)
+    if err != nil {
+        return fmt.Errorf("querying owner: %w", err)
+    }
+    log.Println("owner:", owner)
+    return nil
+}
+```
+
+The full example exists in [GitHub](https://github.com/ent/ent/tree/master/examples/o2o2types).
+
+## O2O Same Type
+
+In this linked-list example, we have a **recursive relation** named `next` / `prev`. Each node in the list can **have only one** `next` node. If a node A points (using `next`) to node B, B can get its pointer using `prev` (the back-reference edge).
+
+```markdown
+// Edges of the Node.
+func (Node) Edges() []ent.Edge {
+    return []ent.Edge{
+        edge.To("next", Node.Type).
+            Unique().
+            From("prev").
+            Unique(),
+    }
+}
+```
+
+As you can see, in cases of relations of the same type, you can declare the edge and its reference in the same builder.
+
+```markdown
+func (Node) Edges() []ent.Edge {
+    return []ent.Edge{
++       edge.To("next", Node.Type).
++           Unique().
++           From("prev").
++           Unique(),
+
+-       edge.To("next", Node.Type).
+-           Unique(),
+-       edge.From("prev", Node.Type).
+-           Ref("next").
+-           Unique(),
+    }
+}
+```
+
+The API for interacting with these edges is as follows:
+
+```markdown
+func Do(ctx context.Context, client *ent.Client) error {
+    head, err := client.Node.
+        Create().
+        SetValue(1).
+        Save(ctx)
+    if err != nil {
+        return fmt.Errorf("creating the head: %w", err)
+    }
+    curr := head
+    // Generate the following linked-list: 1<->2<->3<->4<->5.
+    for i := 0; i < 4; i++ {
+        curr, err = client.Node.
+            Create().
+            SetValue(curr.Value + 1).
+            SetPrev(curr).
+            Save(ctx)
+        if err != nil {
+            return err
+        }
+    }
+
+    // Loop over the list and print it. \`FirstX\` panics if an error occur.
+    for curr = head; curr != nil; curr = curr.QueryNext().FirstX(ctx) {
+        fmt.Printf("%d ", curr.Value)
+    }
+    // Output: 1 2 3 4 5
+
+    // Make the linked-list circular:
+    // The tail of the list, has no "next".
+    tail, err := client.Node.
+        Query().
+        Where(node.Not(node.HasNext())).
+        Only(ctx)
+    if err != nil {
+        return fmt.Errorf("getting the tail of the list: %v", tail)
+    }
+    tail, err = tail.Update().SetNext(head).Save(ctx)
+    if err != nil {
+        return err
+    }
+    // Check that the change actually applied:
+    prev, err := head.QueryPrev().Only(ctx)
+    if err != nil {
+        return fmt.Errorf("getting head's prev: %w", err)
+    }
+    fmt.Printf("\n%v", prev.Value == tail.Value)
+    // Output: true
+    return nil
+}
+```
+
+The full example exists in [GitHub](https://github.com/ent/ent/tree/master/examples/o2orecur).
+
+## O2O Bidirectional
+
+In this user-spouse example, we have a **symmetric O2O relation** named `spouse`. Each user can **have only one** spouse. If user A sets its spouse (using `spouse`) to B, B can get its spouse using the `spouse` edge.
+
+Note that there are no owner/inverse terms in cases of bidirectional edges.
+
+```markdown
+// Edges of the User.
+func (User) Edges() []ent.Edge {
+    return []ent.Edge{
+        edge.To("spouse", User.Type).
+            Unique(),
+    }
+}
+```
+
+The API for interacting with this edge is as follows:
+
+```markdown
+func Do(ctx context.Context, client *ent.Client) error {
+    a8m, err := client.User.
+        Create().
+        SetAge(30).
+        SetName("a8m").
+        Save(ctx)
+    if err != nil {
+        return fmt.Errorf("creating user: %w", err)
+    }
+    nati, err := client.User.
+        Create().
+        SetAge(28).
+        SetName("nati").
+        SetSpouse(a8m).
+        Save(ctx)
+    if err != nil {
+        return fmt.Errorf("creating user: %w", err)
+    }
+
+    // Query the spouse edge.
+    // Unlike \`Only\`, \`OnlyX\` panics if an error occurs.
+    spouse := nati.QuerySpouse().OnlyX(ctx)
+    fmt.Println(spouse.Name)
+    // Output: a8m
+
+    spouse = a8m.QuerySpouse().OnlyX(ctx)
+    fmt.Println(spouse.Name)
+    // Output: nati
+
+    // Query how many users have a spouse.
+    // Unlike \`Count\`, \`CountX\` panics if an error occurs.
+    count := client.User.
+        Query().
+        Where(user.HasSpouse()).
+        CountX(ctx)
+    fmt.Println(count)
+    // Output: 2
+
+    // Get the user, that has a spouse with name="a8m".
+    spouse = client.User.
+        Query().
+        Where(user.HasSpouseWith(user.Name("a8m"))).
+        OnlyX(ctx)
+    fmt.Println(spouse.Name)
+    // Output: nati
+    return nil
+}
+```
+
+Note that, the foreign-key column can be configured and exposed as an entity field using the [Edge Field](#edge-field) option as follows:
+
+```markdown
+// Fields of the User.
+func (User) Fields() []ent.Field {
+    return []ent.Field{
+        field.Int("spouse_id").
+            Optional(),
+    }
+}
+
+// Edges of the User.
+func (User) Edges() []ent.Edge {
+    return []ent.Edge{
+        edge.To("spouse", User.Type).
+            Unique().
+            Field("spouse_id"),
+    }
+}
+```
+
+The full example exists in [GitHub](https://github.com/ent/ent/tree/master/examples/o2obidi).
+
+## O2M Two Types
+
+In this user-pets example, we have a O2M relation between user and its pets. Each user **has many** pets, and a pet **has one** owner. If user A adds a pet B using the `pets` edge, B can get its owner using the `owner` edge (the back-reference edge).
+
+Note that this relation is also a M2O (many-to-one) from the point of view of the `Pet` schema.
+
+```markdown
+// Edges of the User.
+func (User) Edges() []ent.Edge {
+    return []ent.Edge{
+        edge.To("pets", Pet.Type),
+    }
+}
+```
+
+The API for interacting with these edges is as follows:
+
+```markdown
+func Do(ctx context.Context, client *ent.Client) error {
+    // Create the 2 pets.
+    pedro, err := client.Pet.
+        Create().
+        SetName("pedro").
+        Save(ctx)
+    if err != nil {
+        return fmt.Errorf("creating pet: %w", err)
+    }
+    lola, err := client.Pet.
+        Create().
+        SetName("lola").
+        Save(ctx)
+    if err != nil {
+        return fmt.Errorf("creating pet: %w", err)
+    }
+    // Create the user, and add its pets on the creation.
+    a8m, err := client.User.
+        Create().
+        SetAge(30).
+        SetName("a8m").
+        AddPets(pedro, lola).
+        Save(ctx)
+    if err != nil {
+        return fmt.Errorf("creating user: %w", err)
+    }
+    fmt.Println("User created:", a8m)
+    // Output: User(id=1, age=30, name=a8m)
+
+    // Query the owner. Unlike \`Only\`, \`OnlyX\` panics if an error occurs.
+    owner := pedro.QueryOwner().OnlyX(ctx)
+    fmt.Println(owner.Name)
+    // Output: a8m
+
+    // Traverse the sub-graph. Unlike \`Count\`, \`CountX\` panics if an error occurs.
+    count := pedro.
+        QueryOwner(). // a8m
+        QueryPets().  // pedro, lola
+        CountX(ctx)   // count
+    fmt.Println(count)
+    // Output: 2
+    return nil
+}
+```
+
+Note that, the foreign-key column can be configured and exposed as an entity field using the [Edge Field](#edge-field) option as follows:
+
+```markdown
+// Fields of the Pet.
+func (Pet) Fields() []ent.Field {
+    return []ent.Field{
+        field.Int("owner_id").
+            Optional(),
+    }
+}
+
+// Edges of the Pet.
+func (Pet) Edges() []ent.Edge {
+    return []ent.Edge{
+        edge.From("owner", User.Type).
+            Ref("pets").
+            Unique().
+            Field("owner_id"),
+    }
+}
+```
+
+The full example exists in [GitHub](https://github.com/ent/ent/tree/master/examples/o2m2types).
+
+## O2M Same Type
+
+In this example, we have a recursive O2M relation between tree's nodes and their children (or their parent).  
+Each node in the tree **has many** children, and **has one** parent. If node A adds B to its children, B can get its owner using the `owner` edge.
+
+```markdown
+// Edges of the Node.
+func (Node) Edges() []ent.Edge {
+    return []ent.Edge{
+        edge.To("children", Node.Type).
+            From("parent").
+            Unique(),
+    }
+}
+```
+
+As you can see, in cases of relations of the same type, you can declare the edge and its reference in the same builder.
+
+```markdown
+func (Node) Edges() []ent.Edge {
+    return []ent.Edge{
++       edge.To("children", Node.Type).
++           From("parent").
++           Unique(),
+
+-       edge.To("children", Node.Type),
+-       edge.From("parent", Node.Type).
+-           Ref("children").
+-           Unique(),
+    }
+}
+```
+
+The API for interacting with these edges is as follows:
+
+```markdown
+func Do(ctx context.Context, client *ent.Client) error {
+    root, err := client.Node.
+        Create().
+        SetValue(2).
+        Save(ctx)
+    if err != nil {
+        return fmt.Errorf("creating the root: %w", err)
+    }
+    // Add additional nodes to the tree:
+    //
+    //       2
+    //     /   \
+    //    1     4
+    //        /   \
+    //       3     5
+    //
+    // Unlike \`Save\`, \`SaveX\` panics if an error occurs.
+    n1 := client.Node.
+        Create().
+        SetValue(1).
+        SetParent(root).
+        SaveX(ctx)
+    n4 := client.Node.
+        Create().
+        SetValue(4).
+        SetParent(root).
+        SaveX(ctx)
+    n3 := client.Node.
+        Create().
+        SetValue(3).
+        SetParent(n4).
+        SaveX(ctx)
+    n5 := client.Node.
+        Create().
+        SetValue(5).
+        SetParent(n4).
+        SaveX(ctx)
+
+    fmt.Println("Tree leafs", []int{n1.Value, n3.Value, n5.Value})
+    // Output: Tree leafs [1 3 5]
+
+    // Get all leafs (nodes without children).
+    // Unlike \`Int\`, \`IntX\` panics if an error occurs.
+    ints := client.Node.
+        Query().                             // All nodes.
+        Where(node.Not(node.HasChildren())). // Only leafs.
+        Order(ent.Asc(node.FieldValue)).     // Order by their \`value\` field.
+        GroupBy(node.FieldValue).            // Extract only the \`value\` field.
+        IntsX(ctx)
+    fmt.Println(ints)
+    // Output: [1 3 5]
+
+    // Get orphan nodes (nodes without parent).
+    // Unlike \`Only\`, \`OnlyX\` panics if an error occurs.
+    orphan := client.Node.
+        Query().
+        Where(node.Not(node.HasParent())).
+        OnlyX(ctx)
+    fmt.Println(orphan)
+    // Output: Node(id=1, value=2)
+
+    return nil
+}
+```
+
+Note that, the foreign-key column can be configured and exposed as an entity field using the [Edge Field](#edge-field) option as follows:
+
+```markdown
+// Fields of the Node.
+func (Node) Fields() []ent.Field {
+    return []ent.Field{
+        field.Int("parent_id").
+            Optional(),
+    }
+}
+
+// Edges of the Node.
+func (Node) Edges() []ent.Edge {
+    return []ent.Edge{
+        edge.To("children", Node.Type).
+            From("parent").
+            Unique().
+            Field("parent_id"),
+    }
+}
+```
+
+The full example exists in [GitHub](https://github.com/ent/ent/tree/master/examples/o2mrecur).
+
+## M2M Two Types
+
+In this groups-users example, we have a M2M relation between groups and their users. Each group **has many** users, and each user can be joined to **many** groups.
+
+```markdown
+// Edges of the Group.
+func (Group) Edges() []ent.Edge {
+    return []ent.Edge{
+        edge.To("users", User.Type),
+    }
+}
+```
+```markdown
+// Edges of the User.
+func (User) Edges() []ent.Edge {
+    return []ent.Edge{
+        edge.From("groups", Group.Type).
+            Ref("users"),
+    }
+}
+```
+
+The API for interacting with these edges is as follows:
+
+```markdown
+func Do(ctx context.Context, client *ent.Client) error {
+    // Unlike \`Save\`, \`SaveX\` panics if an error occurs.
+    hub := client.Group.
+        Create().
+        SetName("GitHub").
+        SaveX(ctx)
+    lab := client.Group.
+        Create().
+        SetName("GitLab").
+        SaveX(ctx)
+    a8m := client.User.
+        Create().
+        SetAge(30).
+        SetName("a8m").
+        AddGroups(hub, lab).
+        SaveX(ctx)
+    nati := client.User.
+        Create().
+        SetAge(28).
+        SetName("nati").
+        AddGroups(hub).
+        SaveX(ctx)
+
+    // Query the edges.
+    groups, err := a8m.
+        QueryGroups().
+        All(ctx)
+    if err != nil {
+        return fmt.Errorf("querying a8m groups: %w", err)
+    }
+    fmt.Println(groups)
+    // Output: [Group(id=1, name=GitHub) Group(id=2, name=GitLab)]
+
+    groups, err = nati.
+        QueryGroups().
+        All(ctx)
+    if err != nil {
+        return fmt.Errorf("querying nati groups: %w", err)
+    }
+    fmt.Println(groups)
+    // Output: [Group(id=1, name=GitHub)]
+
+    // Traverse the graph.
+    users, err := a8m.
+        QueryGroups().                                           // [hub, lab]
+        Where(group.Not(group.HasUsersWith(user.Name("nati")))). // [lab]
+        QueryUsers().                                            // [a8m]
+        QueryGroups().                                           // [hub, lab]
+        QueryUsers().                                            // [a8m, nati]
+        All(ctx)
+    if err != nil {
+        return fmt.Errorf("traversing the graph: %w", err)
+    }
+    fmt.Println(users)
+    // Output: [User(id=1, age=30, name=a8m) User(id=2, age=28, name=nati)]
+    return nil
+}
+```
+
+> [!-secondary] -secondary
+> note
+> 
+> Calling `AddGroups` (a M2M edge) will result in a no-op in case the edge already exists and is not an [EdgeSchema](#edge-schema):
+> 
+> ```markdown
+> a8m := client.User.
+>     Create().
+>     SetName("a8m").
+>     AddGroups(
+>         hub,
+>         hub, // no-op.
+>     ).
+>     SaveX(ctx)
+> ```
+
+The full example exists in [GitHub](https://github.com/ent/ent/tree/master/examples/m2m2types).
+
+## M2M Same Type
+
+In this following-followers example, we have a M2M relation between users to their followers. Each user can follow **many** users, and can have **many** followers.
+
+```markdown
+// Edges of the User.
+func (User) Edges() []ent.Edge {
+    return []ent.Edge{
+        edge.To("following", User.Type).
+            From("followers"),
+    }
+}
+```
+
+As you can see, in cases of relations of the same type, you can declare the edge and its reference in the same builder.
+
+```markdown
+func (User) Edges() []ent.Edge {
+    return []ent.Edge{
++       edge.To("following", User.Type).
++           From("followers"),
+
+-       edge.To("following", User.Type),
+-       edge.From("followers", User.Type).
+-           Ref("following"),
+    }
+}
+```
+
+The API for interacting with these edges is as follows:
+
+```markdown
+func Do(ctx context.Context, client *ent.Client) error {
+    // Unlike \`Save\`, \`SaveX\` panics if an error occurs.
+    a8m := client.User.
+        Create().
+        SetAge(30).
+        SetName("a8m").
+        SaveX(ctx)
+    nati := client.User.
+        Create().
+        SetAge(28).
+        SetName("nati").
+        AddFollowers(a8m).
+        SaveX(ctx)
+
+    // Query following/followers:
+
+    flw := a8m.QueryFollowing().AllX(ctx)
+    fmt.Println(flw)
+    // Output: [User(id=2, age=28, name=nati)]
+
+    flr := a8m.QueryFollowers().AllX(ctx)
+    fmt.Println(flr)
+    // Output: []
+
+    flw = nati.QueryFollowing().AllX(ctx)
+    fmt.Println(flw)
+    // Output: []
+
+    flr = nati.QueryFollowers().AllX(ctx)
+    fmt.Println(flr)
+    // Output: [User(id=1, age=30, name=a8m)]
+
+    // Traverse the graph:
+
+    ages := nati.
+        QueryFollowers().       // [a8m]
+        QueryFollowing().       // [nati]
+        GroupBy(user.FieldAge). // [28]
+        IntsX(ctx)
+    fmt.Println(ages)
+    // Output: [28]
+
+    names := client.User.
+        Query().
+        Where(user.Not(user.HasFollowers())).
+        GroupBy(user.FieldName).
+        StringsX(ctx)
+    fmt.Println(names)
+    // Output: [a8m]
+    return nil
+}
+```
+
+> [!-secondary] -secondary
+> note
+> 
+> Calling `AddFollowers` (a M2M edge) will result in a no-op in case the edge already exists and is not an [EdgeSchema](#edge-schema):
+> 
+> ```markdown
+> a8m := client.User.
+>     Create().
+>     SetName("a8m").
+>     AddFollowers(
+>         nati,
+>         nati, // no-op.
+>     ).
+>     SaveX(ctx)
+> ```
+
+The full example exists in [GitHub](https://github.com/ent/ent/tree/master/examples/m2mrecur).
+
+## M2M Bidirectional
+
+In this user-friends example, we have a **symmetric M2M relation** named `friends`. Each user can **have many** friends. If user A becomes a friend of B, B is also a friend of A.
+
+Note that there are no owner/inverse terms in cases of bidirectional edges.
+
+```markdown
+// Edges of the User.
+func (User) Edges() []ent.Edge {
+    return []ent.Edge{
+        edge.To("friends", User.Type),
+    }
+}
+```
+
+The API for interacting with these edges is as follows:
+
+```markdown
+func Do(ctx context.Context, client *ent.Client) error {
+    // Unlike \`Save\`, \`SaveX\` panics if an error occurs.
+    a8m := client.User.
+        Create().
+        SetAge(30).
+        SetName("a8m").
+        SaveX(ctx)
+    nati := client.User.
+        Create().
+        SetAge(28).
+        SetName("nati").
+        AddFriends(a8m).
+        SaveX(ctx)
+
+    // Query friends. Unlike \`All\`, \`AllX\` panics if an error occurs.
+    friends := nati.
+        QueryFriends().
+        AllX(ctx)
+    fmt.Println(friends)
+    // Output: [User(id=1, age=30, name=a8m)]
+
+    friends = a8m.
+        QueryFriends().
+        AllX(ctx)
+    fmt.Println(friends)
+    // Output: [User(id=2, age=28, name=nati)]
+
+    // Query the graph:
+    friends = client.User.
+        Query().
+        Where(user.HasFriends()).
+        AllX(ctx)
+    fmt.Println(friends)
+    // Output: [User(id=1, age=30, name=a8m) User(id=2, age=28, name=nati)]
+    return nil
+}
+```
+
+> [!-secondary] -secondary
+> note
+> 
+> Calling `AddFriends` (a M2M bidirectional edge) will result in a no-op in case the edge already exists and is not an [EdgeSchema](#edge-schema):
+> 
+> ```markdown
+> a8m := client.User.
+>     Create().
+>     SetName("a8m").
+>     AddFriends(
+>         nati,
+>         nati, // no-op.
+>     ).
+>     SaveX(ctx)
+> ```
+
+The full example exists in [GitHub](https://github.com/ent/ent/tree/master/examples/m2mbidi).
+
+## Edge Field
+
+The `Field` option for edges allows users to expose foreign-keys as regular fields on the schema. Note that only relations that hold foreign-keys (edge-ids) are allowed to use this option.
+
+```markdown
+// Fields of the Post.
+func (Post) Fields() []ent.Field {
+    return []ent.Field{
+        field.Int("author_id").
+            Optional(),
+    }
+}
+
+// Edges of the Post.
+func (Post) Edges() []ent.Edge {
+    return []ent.Edge{
+        edge.To("author", User.Type).
+            // Bind the "author_id" field to this edge.
+            Field("author_id").
+            Unique(),
+    }
+}
+```
+
+The API for interacting with edge-fields is as follows:
+
+```markdown
+func Do(ctx context.Context, client *ent.Client) error {
+    p, err := c.Post.Query().
+        Where(post.AuthorID(id)).
+        OnlyX(ctx)
+    if err != nil {
+        log.Fatal(err)  
+    }
+    fmt.Println(p.AuthorID) // Access the "author" foreign-key.
+}
+```
+
+Multiple examples exists in [GitHub](https://github.com/ent/ent/tree/master/entc/integration/edgefield).
+
+#### Migration To Edge Fields
+
+As mentioned in the [StorageKey](#storagekey) section, Ent configures edge storage-keys (e.g. foreign-keys) by the `edge.To`. Therefore, if you want to add a field to an existing edge (already exists in the database as a column), you need to set it up with the `StorageKey` option as follows:
+
+```markdown
+// Fields of the Post.
+func (Post) Fields() []ent.Field {
+    return []ent.Field{
++       field.Int("author_id").
++           Optional(),
+    }
+}
+
+// Edges of the Post.
+func (Post) Edges() []ent.Edge {
+    return []ent.Edge{
+        edge.From("author", User.Type).
++           Field("author_id").
++           StorageKey(edge.Column("post_author")).
+            Unique(),
+    }
+}
+```
+
+Alternatively, this option can be configured on the edge-field instead:
+
+```markdown
+// Fields of the Post.
+func (Post) Fields() []ent.Field {
+    return []ent.Field{
++       field.Int("author_id").
++           StorageKey("post_author").
++           Optional(),
+    }
+}
+```
+
+If you're not sure how the foreign-key was named before using the edge-field option, check out the generated schema description in your project: `<project>/ent/migrate/schema.go`.
+
+## Edge Schema
+
+Edge schemas are intermediate entity schemas for M2M edges. By using the `Through` option, users can define edge schemas for relationships. This allows users to expose relationships in their public APIs, store additional fields, apply CRUD operations, and set hooks and privacy policies on edges.
+
+#### User Friendships Example
+
+In the following example, we demonstrate how to model the friendship between two users using an edge schema with the two required fields of the relationship (`user_id` and `friend_id`), and an additional field named `created_at` whose value is automatically set on creation.
+
+- User
+- Friendship
+
+```markdown
+// User holds the schema definition for the User entity.
+type User struct {
+    ent.Schema
+}
+
+// Fields of the User.
+func (User) Fields() []ent.Field {
+    return []ent.Field{
+        field.String("name").
+            Default("Unknown"),
+    }
+}
+
+// Edges of the User.
+func (User) Edges() []ent.Edge {
+    return []ent.Edge{
+        edge.To("friends", User.Type).
+            Through("friendships", Friendship.Type),
+    }
+}
+```
+
+> [!-info] -info
+> info
+> 
+> - Similar to entity schemas, the `ID` field is automatically generated for edge schemas if not stated otherwise.
+> - Edge schemas cannot be used by more than one relationship.
+> - The `user_id` and `friend_id` edge-fields are **required** in the edge schema as they compose the relationship.
+
+#### User Likes Example
+
+In the following example, we demonstrate how to model a system where users can "like" tweets, and a timestamp of when the tweet was "liked" is stored in the database. This is a way to store additional fields on the edge.
+
+- User
+- Tweet
+- Like
+
+```markdown
+// User holds the schema definition for the User entity.
+type User struct {
+    ent.Schema
+}
+
+// Fields of the User.
+func (User) Fields() []ent.Field {
+    return []ent.Field{
+        field.String("name").
+            Default("Unknown"),
+    }
+}
+
+// Edges of the User.
+func (User) Edges() []ent.Edge {
+    return []ent.Edge{
+        edge.To("liked_tweets", Tweet.Type).
+            Through("likes", Like.Type),
+    }
+}
+```
+
+> [!-info] -info
+> info
+> 
+> In the example above, the `field.ID` annotation is used to tell Ent that the edge schema identifier is a composite primary-key of the two edge-fields, `user_id` and `tweet_id`. Therefore, the `ID` field will not be generated for the `Like` struct along with any of its builder methods. e.g. `Get`, `OnlyID`, etc.
+
+#### Usage Of Edge Schema In Other Edge Types
+
+In some cases, users want to store O2M/M2O or O2O relationships in a separate table (i.e. join table) in order to simplify future migrations in case the edge type was changed. For example, wanting to change a O2M/M2O edge to M2M by dropping a unique constraint instead of migrating foreign-key values to a new table.
+
+In the following example, we present a model where users can "author" tweets with the constraint that a tweet can be written by only one user. Unlike regular O2M/M2O edges, by using an edge schema, we enforce this constraint on the join table using a unique index on the `tweet_id` column. This constraint may be dropped in the future to allow multiple users to participate in the "authoring" of a tweet. Hence, changing the edge type to M2M without migrating the data to a new table.
+
+- User
+- Tweet
+- UserTweet
+
+```markdown
+// User holds the schema definition for the User entity.
+type User struct {
+    ent.Schema
+}
+
+// Fields of the User.
+func (User) Fields() []ent.Field {
+    return []ent.Field{
+        field.String("name").
+            Default("Unknown"),
+    }
+}
+
+// Edges of the User.
+func (User) Edges() []ent.Edge {
+    return []ent.Edge{
+        edge.To("tweets", Tweet.Type).
+            Through("user_tweets", UserTweet.Type),
+    }
+}
+```
+
+## Required
+
+Edges can be defined as required in the entity creation using the `Required` method on the builder.
+
+```markdown
+// Edges of the Card.
+func (Card) Edges() []ent.Edge {
+    return []ent.Edge{
+        edge.From("owner", User.Type).
+            Ref("card").
+            Unique().
+            Required(),
+    }
+}
+```
+
+If the example above, a card entity cannot be created without its owner.
+
+> [!-info] -info
+> info
+> 
+> Note that, starting with [v0.10](https://github.com/ent/ent/releases/tag/v0.10.0), foreign key columns are created as `NOT NULL` in the database for required edges that are not [self-reference](#o2m-same-type). In order to migrate existing foreign key columns, use the [Atlas Migration](migrate.md#atlas-integration) option.
+
+## Immutable
+
+Immutable edges are edges that can be set or added only in the creation of the entity. i.e., no setters will be generated for the update builders of the entity.
+
+```markdown
+// Edges of the User.
+func (User) Edges() []ent.Edge {
+    return []ent.Edge{
+        edge.To("tenant", Tenant.Type).
+            Field("tenant_id").
+            Unique().
+            Required().
+            Immutable(),
+    }
+}
+```
+
+## StorageKey
+
+By default, Ent configures edge storage-keys by the edge-owner (the schema that holds the `edge.To`), and not the by back-reference (`edge.From`). This is because back-references are optional and can be removed.
+
+In order to use custom storage configuration for edges, use the `StorageKey` method as follows:
+
+```markdown
+// Edges of the User.
+func (User) Edges() []ent.Edge {
+    return []ent.Edge{
+        edge.To("pets", Pet.Type).
+            // Set the column name in the "pets" table for O2M relationship.
+            StorageKey(edge.Column("owner_id")),
+        edge.To("cars", Car.Type).
+            // Set the symbol of the foreign-key constraint for O2M relationship.
+            StorageKey(edge.Symbol("cars_owner_id")),
+        edge.To("friends", User.Type).
+            // Set the join-table, and the column names for a M2M relationship.
+            StorageKey(edge.Table("friends"), edge.Columns("user_id", "friend_id")),
+        edge.To("groups", Group.Type).
+            // Set the join-table, its column names and the symbols
+            // of the foreign-key constraints for M2M relationship.
+            StorageKey(
+                edge.Table("groups"),
+                edge.Columns("user_id", "group_id"),
+                edge.Symbols("groups_id1", "groups_id2")
+            ),
+    }
+}
+```
+
+## Struct Tags
+
+Custom struct tags can be added to the generated entities using the `StructTag` method. Note that if this option was not provided, or provided and did not contain the `json` tag, the default `json` tag will be added with the field name.
+
+```markdown
+// Edges of the User.
+func (User) Edges() []ent.Edge {
+    return []ent.Edge{
+        edge.To("pets", Pet.Type).
+            // Override the default json tag "pets" with "owner" for O2M relationship.
+            StructTag(\`json:"owner"\`),
+    }
+}
+```
+
+## Indexes
+
+Indexes can be defined on multi fields and some types of edges as well. However, you should note, that this is currently an SQL-only feature.
+
+Read more about this in the [Indexes](schema-indexes.md) section.
+
+A comment can be added to the edge using the `.Comment()` method. This comment appears before the edge in the generated entity code. Newlines are supported using the `\n` escape sequence.
+
+```markdown
+// Edges of the User.
+func (User) Edges() []ent.Edge {
+    return []ent.Edge{
+        edge.To("pets", Pet.Type).
+            Comment("Pets that this user is responsible for taking care of.\n" + 
+                "May be zero to many, depending on the user.")
+    }
+}
+```
+
+## Annotations
+
+`Annotations` is used to attach arbitrary metadata to the edge object in code generation. Template extensions can retrieve this metadata and use it inside their templates.
+
+Note that the metadata object must be serializable to a JSON raw value (e.g. struct, map or slice).
+
+```markdown
+// Pet schema.
+type Pet struct {
+    ent.Schema
+}
+
+// Edges of the Pet.
+func (Pet) Edges() []ent.Edge {
+    return []ent.Edge{
+        edge.To("owner", User.Type).
+            Ref("pets").
+            Unique().
+            Annotations(entgql.RelayConnection()),
+    }
+}
+```
+
+Read more about annotations and their usage in templates in the [template doc](templates.md#annotations).
+
+## Naming Convention
+
+By convention edge names should use `snake_case`. The corresponding struct fields generated by `ent` will follow the Go convention of using `PascalCase`. In cases where `PascalCase` is desired, you can do so with the `StorageKey` or `StructTag` methods.

@@ -1,0 +1,400 @@
+---
+url: https://entgo.io/docs/tutorial-todo-gql
+title: "Tutorial Todo Gql"
+description: ""
+access_date: 2026-08-03T17:26:33.758Z
+current_date: 2026-08-03T17:26:33.758Z
+---
+
+In this tutorial, we will learn how to connect Ent to [GraphQL](https://graphql.org/) and set up the various integrations Ent provides, such as:
+
+1. Generating a GraphQL schema for nodes and edges defined in an Ent schema.
+2. Auto-generated `Query` and `Mutation` resolvers and provide seamless integration with the [Relay framework](https://relay.dev/).
+3. Filtering, pagination (including nested) and compliant support with the [Relay Cursor Connections Spec](https://relay.dev/graphql/connections.htm).
+4. Efficient [field collection](tutorial-todo-gql-field-collection.md) to overcome the N+1 problem without requiring data loaders.
+5. [Transactional mutations](tutorial-todo-gql-tx-mutation.md) to ensure consistency in case of failures.
+
+If you're not familiar with GraphQL, it's recommended to go over its [introduction guide](https://graphql.org/learn/) before going over this tutorial.
+
+#### Clone the code (optional)
+
+The code for this tutorial is available under [github.com/a8m/ent-graphql-example](https://github.com/a8m/ent-graphql-example), and tagged (using Git) in each step. If you want to skip the basic setup and start with the initial version of the GraphQL server, you can clone the repository as follows:
+
+```shell
+git clone git@github.com:a8m/ent-graphql-example.git
+cd ent-graphql-example
+go run ./cmd/todo
+```
+
+## Basic Setup
+
+This tutorial begins where the previous one ended (with a working Todo-list schema). We start by installing the [contrib/entgql](https://pkg.go.dev/entgo.io/contrib/entgql) Ent extension and use it for generating our first schema. Then, install and configure the [99designs/gqlgen](https://github.com/99designs/gqlgen) framework for building our GraphQL server and explore the official integration Ent provides to it.
+
+#### Install and configure entgql
+
+1\. Install `entgql`:
+
+```shell
+go get entgo.io/contrib/entgql@master
+```
+
+2\. Add the following annotations to the `Todo` schema to enable `Query` and `Mutation` (creation) capabilities:
+
+```markdown
+func (Todo) Annotations() []schema.Annotation {
+    return []schema.Annotation{
+        entgql.QueryField(),
+        entgql.Mutations(entgql.MutationCreate()),
+    }
+}
+```
+
+3\. Create a new Go file named `ent/entc.go`, and paste the following content:
+
+```markdown
+//go:build ignore
+
+package main
+
+import (
+    "log"
+
+    "entgo.io/ent/entc"
+    "entgo.io/ent/entc/gen"
+    "entgo.io/contrib/entgql"
+)
+
+func main() {
+    ex, err := entgql.NewExtension(
+        // Tell Ent to generate a GraphQL schema for
+        // the Ent schema in a file named ent.graphql.
+        entgql.WithSchemaGenerator(),
+        entgql.WithSchemaPath("ent.graphql"),
+    )
+    if err != nil {
+        log.Fatalf("creating entgql extension: %v", err)
+    }
+    opts := []entc.Option{
+        entc.Extensions(ex),
+    }
+    if err := entc.Generate("./ent/schema", &gen.Config{}, opts...); err != nil {
+        log.Fatalf("running ent codegen: %v", err)
+    }
+}
+```
+
+> [!-secondary] -secondary
+> note
+> 
+> The `ent/entc.go` is ignored using a build tag, and it is executed by the `go generate` command through the `generate.go` file.
+
+**4.** Remove the `ent/generate.go` file and create a new one in the **root of the project** with the following contents. In next steps, `gqlgen` commands will be added to this file as well.
+
+```markdown
+package todo
+
+//go:generate go run -mod=mod ./ent/entc.go
+```
+
+#### Running schema generation
+
+After installing and configuring `entgql`, it is time to execute the codegen:
+
+```shell
+go generate .
+```
+
+You'll notice a new file was created named `ent.graphql`:
+
+```graphql
+directive @goField(forceResolver: Boolean, name: String) on FIELD_DEFINITION | INPUT_FIELD_DEFINITION
+directive @goModel(model: String, models: [String!]) on OBJECT | INPUT_OBJECT | SCALAR | ENUM | INTERFACE | UNION
+"""
+Define a Relay Cursor type:
+https://relay.dev/graphql/connections.htm#sec-Cursor
+"""
+scalar Cursor
+"""
+An object with an ID.
+Follows the [Relay Global Object Identification Specification](https://relay.dev/graphql/objectidentification.htm)
+"""
+interface Node @goModel(model: "todo/ent.Noder") {
+  """The id of the object."""
+  id: ID!
+}
+
+# ...
+```
+
+#### Install and configure gqlgen
+
+1\. Install `99designs/gqlgen`:
+
+```shell
+go get github.com/99designs/gqlgen
+```
+
+2\. The gqlgen package can be configured using a `gqlgen.yml` file that is automatically loaded from the current directory. Let's add this file to the root of the project. Follow the comments in this file to understand what each config directive means:
+
+```yaml
+# schema tells gqlgen where the GraphQL schema is located.
+schema:
+  - ent.graphql
+
+# resolver reports where the resolver implementations go.
+resolver:
+  dir: .
+
+# gqlgen will search for any type names in the schema in these go packages
+# if they match it will use them, otherwise it will generate them.
+
+# autobind tells gqngen to search for any type names in the GraphQL schema in the
+# provided package. If they match it will use them, otherwise it will generate new.
+autobind:
+  - todo/ent
+  - todo/ent/todo
+
+# This section declares type mapping between the GraphQL and Go type systems.
+models:
+  # Defines the ID field as Go 'int'.
+  ID:
+    model:
+      - github.com/99designs/gqlgen/graphql.IntID
+  Node:
+    model:
+      - todo/ent.Noder
+```
+
+3\. Edit the `ent/entc.go` to let Ent know about the `gqlgen` configuration:
+
+```markdown
+//go:build ignore
+
+package main
+
+import (
+    "log"
+
+    "entgo.io/ent/entc"
+    "entgo.io/ent/entc/gen"
+    "entgo.io/contrib/entgql"
+)
+
+func main() {
+    ex, err := entgql.NewExtension(
+        // Tell Ent to generate a GraphQL schema for
+        // the Ent schema in a file named ent.graphql.
+        entgql.WithSchemaGenerator(),
+        entgql.WithSchemaPath("ent.graphql"),
+        entgql.WithConfigPath("gqlgen.yml"),
+    )
+    if err != nil {
+        log.Fatalf("creating entgql extension: %v", err)
+    }
+    opts := []entc.Option{
+        entc.Extensions(ex),
+    }
+    if err := entc.Generate("./ent/schema", &gen.Config{}, opts...); err != nil {
+        log.Fatalf("running ent codegen: %v", err)
+    }
+}
+```
+
+4\. Add the `gqlgen` generate command to the `generate.go` file:
+
+```markdown
+package todo
+
+//go:generate go run -mod=mod ./ent/entc.go
+//go:generate go run -mod=mod github.com/99designs/gqlgen
+```
+
+Now, we're ready to run `go generate` to trigger `ent` and `gqlgen` code generation. Execute the following command from the root of the project:
+
+```shell
+go generate .
+```
+
+You may have noticed that some files were generated by `gqlgen`:
+
+```markdown
+tree -L 1
+.
+├── ent/
+├── ent.graphql
+├── ent.resolvers.go
+├── example_test.go
+├── generate.go
+├── generated.go
+├── go.mod
+├── go.sum
+├── gqlgen.yml
+└── resolver.go
+```
+
+## Basic Server
+
+Before building the GraphQL server we need to set up the main schema `Resolver` defined in `resolver.go`. `gqlgen` allows changing the generated `Resolver` and adding dependencies to it. Let's use `ent.Client` as a dependency by pasting the following in `resolver.go`:
+
+```markdown
+package todo
+
+import (
+    "todo/ent"
+    
+    "github.com/99designs/gqlgen/graphql"
+)
+
+// Resolver is the resolver root.
+type Resolver struct{ client *ent.Client }
+
+// NewSchema creates a graphql executable schema.
+func NewSchema(client *ent.Client) graphql.ExecutableSchema {
+    return NewExecutableSchema(Config{
+        Resolvers: &Resolver{client},
+    })
+}
+```
+
+After setting up the main resolver, we create a new directory `cmd/todo` and a `main.go` file with the following code to set up a GraphQL server:
+
+```markdown
+package main
+
+import (
+    "context"
+    "log"
+    "net/http"
+
+    "todo"
+    "todo/ent"
+    "todo/ent/migrate"
+
+    "entgo.io/ent/dialect"
+    "github.com/99designs/gqlgen/graphql/handler"
+    "github.com/99designs/gqlgen/graphql/playground"
+
+    _ "github.com/mattn/go-sqlite3"
+)
+
+func main() {
+    // Create ent.Client and run the schema migration.
+    client, err := ent.Open(dialect.SQLite, "file:ent?mode=memory&cache=shared&_fk=1")
+    if err != nil {
+        log.Fatal("opening ent client", err)
+    }
+    if err := client.Schema.Create(
+        context.Background(),
+        migrate.WithGlobalUniqueID(true),
+    ); err != nil {
+        log.Fatal("opening ent client", err)
+    }
+
+    // Configure the server and start listening on :8081.
+    srv := handler.NewDefaultServer(todo.NewSchema(client))
+    http.Handle("/",
+        playground.Handler("Todo", "/query"),
+    )
+    http.Handle("/query", srv)
+    log.Println("listening on :8081")
+    if err := http.ListenAndServe(":8081", nil); err != nil {
+        log.Fatal("http server terminated", err)
+    }
+}
+```
+
+Run the server using the command below, and open [localhost:8081](http://localhost:8081/):
+
+```markdown
+go run ./cmd/todo
+```
+
+You should see the interactive playground:
+
+![tutorial-todo-playground](https://entgo.io/images/assets/tutorial-gql-playground.png)
+
+If you are having trouble with getting the playground to run, go to [first section](#clone-the-code-optional) and clone the example repository.
+
+## Query Todos
+
+If we try to query our todo list, we'll get an error as the resolver method is not yet implemented. Let's implement the resolver by replacing the `Todos` implementation in the query resolver:
+
+```markdown
+func (r *queryResolver) Todos(ctx context.Context) ([]*ent.Todo, error) {
+-   panic(fmt.Errorf("not implemented"))
++   return r.client.Todo.Query().All(ctx)
+}
+```
+
+Then, running this GraphQL query should return an empty todo list:
+
+- GraphQL
+- Output
+
+```graphql
+query AllTodos {
+    todos {
+        id
+    }
+}
+```
+
+## Mutating Todos
+
+As you can see above, our GraphQL schema returns an empty list of todo items. Let's create a few todo items, but this time we'll do it from GraphQL. Luckily, Ent provides auto generated mutations for creating and updating nodes and edges.
+
+1\. We start by extending our GraphQL schema with custom mutations. Let's create a new file named `todo.graphql` and add our `Mutation` type:
+
+```graphql
+type Mutation {
+    # The input and the output are types generated by Ent.
+    createTodo(input: CreateTodoInput!): Todo
+}
+```
+
+2\. Add the custom GraphQL schema to `gqlgen.yml` configuration:
+
+```yaml
+schema:
+  - ent.graphql
+  - todo.graphql
+# ...
+```
+
+3\. Run code generation:
+
+```shell
+go generate .
+```
+
+As you can see, `gqlgen` generated for us a new file named `todo.resolvers.go` with the `createTodo` resolver. Let's connect it to Ent generated code, and ask Ent to handle this mutation:
+
+```markdown
+func (r *mutationResolver) CreateTodo(ctx context.Context, input ent.CreateTodoInput) (*ent.Todo, error) {
+-   panic(fmt.Errorf("not implemented: CreateTodo - createTodo"))
++   return r.client.Todo.Create().SetInput(input).Save(ctx)
+}
+```
+
+4\. Re-run `go run ./cmd/todo` again and go to the playground:
+
+## Demo
+
+At this stage, we are ready to create a todo item and query it:
+
+```graphql
+mutation CreateTodo {
+    createTodo(input: {text: "Create GraphQL Example", status: IN_PROGRESS, priority: 1}) {
+        id
+        text
+        createdAt
+        priority
+    }
+}
+```
+
+If you're having trouble with getting this example to work, go to [first section](#clone-the-code-optional) and clone the example repository.
+
+---
+
+Please continue to the next section where we explain how to implement the [Relay Node Interface](https://relay.dev/graphql/objectidentification.htm) and learn how Ent automatically supports this.

@@ -1,0 +1,116 @@
+---
+url: https://entgo.io/docs/ci
+title: "Ci"
+description: ""
+access_date: 2026-08-03T17:26:33.758Z
+current_date: 2026-08-03T17:26:33.758Z
+---
+
+To ensure the quality of their software, teams often apply *Continuous Integration* workflows, commonly known as CI. With CI, teams continuously run a suite of automated verifications against every change to the code-base. During CI, teams may run many kinds of verifications:
+
+- Compilation or build of the most recent version to make sure it isn't broken.
+- Linting to enforce any accepted code-style standards.
+- Unit tests that verify individual components work as expected and that changes to the codebase do not cause regressions in other areas.
+- Security scans to make sure no known vulnerabilities are introduced to the codebase.
+- And much more!
+
+From our discussions with the Ent community, we have learned that many teams using Ent already use CI and would like to enforce some Ent-specific verifications into their workflows.
+
+To support the community with this effort we have started this guide which documents common best practices to verify in CI and introduces [ent/contrib/ci](https://github.com/ent/contrib/tree/master/ci) a GitHub Action we maintain that codifies them.
+
+## Verify all generated files are checked in
+
+Ent heavily relies on code generation. In our experience, generated code should always be checked into source control. This is done for two reasons:
+
+- If generated code is checked into source control, it can be read along with the main application code. Having generated code present when the code is reviewed or when a repository is browsed is essential to get a complete picture of how things work.
+- Differences in development environments between team members can easily be spotted and remedied. This further reduces the chance of "it works on my machine" type issues since everyone is running the same code.
+
+If you're using GitHub for source control, it's easy to verify that all generated files are checked in with the `ent/contrib/ci` GitHub Action. Otherwise, we supply a simple bash script that you can integrate in your existing CI flow.
+
+- GitHub Action
+- Bash
+
+Simply add a file named \`.github/workflows/ent-ci.yaml\` in your repository:
+```yaml
+name: EntCI
+on:
+  push:
+  # Run whenever code is changed in the master.
+    branches:
+      - master
+  # Run on PRs where something changed under the \`ent/\` directory.
+  pull_request:
+    paths:
+      - 'ent/*'
+jobs:
+  ent:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3.0.1
+      - uses: actions/setup-go@v3
+        with:
+          go-version-file: 'go.mod'
+      - uses: ent/contrib/ci@master
+```
+
+## Lint migration files
+
+Changes to your project's Ent schema almost always result in a modification of your database. If you are using [Versioned Migrations](versioned-migrations.md) to manage changes to your database schema, you can run [migration linting](https://atlasgo.io/versioned/lint) as part of your continuous integration flow. This is done for multiple reasons:
+
+- Linting replays your migration directory on a [database container](https://atlasgo.io/concepts/dev-database) to make sure all SQL statements are valid and in the correct order.
+- [Migration directory integrity](versioned-migrations.md#atlas-migration-directory-integrity-file) is enforced - ensuring that history wasn't accidentally changed and that migrations that are planned in parallel are unified to a clean linear history.
+- Destructive changes are detected notifying you of any potential data loss that may be caused by your migrations way before they reach your production database.
+- Linting detects data-dependant changes that *may* fail upon deployment and require more careful review from your side.
+
+If you're using GitHub, you can use the [Official Atlas Action](https://github.com/ariga/atlas-action) to run migration linting during CI.
+
+Add `.github/workflows/atlas-ci.yaml` to your repo with the following contents:
+
+- MySQL
+- MariaDB
+- PostgreSQL
+- SQLite
+
+```yaml
+name: Atlas CI
+on:
+  # Run whenever code is changed in the master branch,
+  # change this to your root branch.
+  push:
+    branches:
+      - master
+  # Run on PRs where something changed under the \`ent/migrate/migrations/\` directory.
+  pull_request:
+    paths:
+      - 'ent/migrate/migrations/*'
+jobs:
+  lint:
+    services:
+      # Spin up a mysql:8.0.29 container to be used as the dev-database for analysis.
+      mysql:
+        image: mysql:8.0.29
+        env:
+          MYSQL_ROOT_PASSWORD: pass
+          MYSQL_DATABASE: test
+        ports:
+          - "3306:3306"
+        options: >-
+          --health-cmd "mysqladmin ping -ppass"
+          --health-interval 10s
+          --health-start-period 10s
+          --health-timeout 5s
+          --health-retries 10
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      - uses: ariga/setup-atlas@v0
+        with:
+          cloud-token: ${{ secrets.ATLAS_CLOUD_TOKEN }}
+      - uses: ariga/atlas-action/migrate/lint@v1
+        with:
+          dir: 'file://ent/migrate/migrations'
+          dir-name: 'my-project' # The name of the project in Atlas Cloud
+          dev-url: "mysql://root:pass@localhost:3306/dev"
+```
+
+Notice that running `atlas migrate lint` requires a clean [dev-database](https://atlasgo.io/concepts/dev-database) which is provided by the `services` block in the example code above.

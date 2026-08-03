@@ -1,0 +1,190 @@
+---
+url: https://entgo.io/docs/data-migrations
+title: "Data Migrations"
+description: ""
+access_date: 2026-08-03T17:26:33.758Z
+current_date: 2026-08-03T17:26:33.758Z
+---
+
+Migrations are usually used for changing the database schema, but in some cases, there is a need to modify the data stored in the database. For example, adding seed data, or back-filling empty columns with custom default values.
+
+Migrations of this type are called data migrations. In this document, we will discuss how to use Ent to plan data migrations and integrate them into your regular schema migrations workflow.
+
+### Migration Types
+
+Ent currently supports two types of migrations, [versioned migration](versioned-migrations.md) and [declarative migration](migrate.md) (also known as automatic migration). Data migrations can be executed in both types of migrations.
+
+## Versioned Migrations
+
+When using versioned migrations, data migrations should be stored on the same `migrations` directory and executed the same way as regular migrations. It is recommended, however, to store data migrations and schema migrations in separate files so that they can be easily tested.
+
+The format used for such migrations is SQL, as the file can be safely executed (and stored without changes) even if the Ent schema was modified and the generated code is not compatible with the data migration file anymore.
+
+There are two ways to create data migrations scripts, manually and generated. By manually editing, users write all the SQL statements and can control exactly what will be executed. Alternatively, users can use Ent to generate the data migrations for them. It is recommended to verify that the generated file was correctly generated, as in some cases it may need to be manually fixed or edited.
+
+### Manual Creation
+
+1\. If you don't have Atlas installed, check out its [getting-started](https://atlasgo.io/getting-started/#installation) guide.
+
+2\. Create a new migration file using [Atlas](https://atlasgo.io/versioned/new):
+
+```shell
+atlas migrate new <migration_name> \
+  --dir "file://my/project/migrations"
+```
+
+3\. Edit the migration file and add the custom data migration there. For example:
+
+```sql
+-- Backfill NULL or null tags with a default value.
+UPDATE \`users\` SET \`tags\` = '["foo","bar"]' WHERE \`tags\` IS NULL OR JSON_CONTAINS(\`tags\`, 'null', '$');
+```
+
+4\. Update the migration directory [integrity file](https://atlasgo.io/concepts/migration-directory-integrity):
+
+```shell
+atlas migrate hash \
+  --dir "file://my/project/migrations"
+```
+
+Check out the [Testing](#testing) section below if you're unsure how to test the data migration file.
+
+### Generated Scripts
+
+Currently, Ent provides initial support for generating data migration files. By using this option, users can simplify the process of writing complex SQL statements manually in most cases. Still, it is recommended to verify that the generated file was correctly generated, as in some edge cases it may need to be manually edited.
+
+1\. Create your [versioned-migration setup](versioned/intro.md), in case it is not set.
+
+2\. Create your first data-migration function. Below, you will find some examples that demonstrate how to write such a function:
+
+- Single Statement
+- Multi Statement
+- Data Seeding
+
+```markdown
+package migratedata
+
+// BackfillUnknown back-fills all empty users' names with the default value 'Unknown'.
+func BackfillUnknown(dir *migrate.LocalDir) error {
+    w := &schema.DirWriter{Dir: dir}
+    client := ent.NewClient(ent.Driver(schema.NewWriteDriver(dialect.MySQL, w)))
+
+    // Change all empty names to 'unknown'.
+    err := client.User.
+        Update().
+        Where(
+            user.NameEQ(""),
+        ).
+        SetName("Unknown").
+        Exec(context.Background())
+    if err != nil {
+        return fmt.Errorf("failed generating statement: %w", err)
+    }
+
+    // Write the content to the migration directory.
+    return w.FlushChange(
+        "unknown_names",
+        "Backfill all empty user names with default value 'unknown'.",
+    )
+}
+```
+
+Then, using this function in `ent/migrate/main.go` will generate the following migration file:
+
+```sql
+-- Backfill all empty user names with default value 'unknown'.
+UPDATE \`users\` SET \`name\` = 'Unknown' WHERE \`users\`.\`name\` = '';
+```
+
+3\. In case the generated file was edited, the migration directory [integrity file](https://atlasgo.io/concepts/migration-directory-integrity) needs to be updated with the following command:
+
+```shell
+atlas migrate hash \
+  --dir "file://my/project/migrations"
+```
+
+### Testing
+
+After adding the migration files, it is highly recommended that you apply them on a local database to ensure they are valid and achieve the intended results. The following process can be done manually or automated by a program.
+
+1\. Execute all migration files until the last created one, the data migration file:
+
+```shell
+# Total number of files.
+number_of_files=$(ls ent/migrate/migrations/*.sql | wc -l)
+
+# Execute all files without the latest.
+atlas migrate apply $[number_of_files-1] \
+  --dir "file://my/project/migrations" \
+  -u "mysql://root:pass@localhost:3306/test"
+```
+
+2\. Ensure the last migration file is pending execution:
+
+```shell
+atlas migrate status \
+  --dir "file://my/project/migrations" \
+  -u "mysql://root:pass@localhost:3306/test"
+
+Migration Status: PENDING
+  -- Current Version: <VERSION_N-1>
+  -- Next Version:    <VERSION_N>
+  -- Executed Files:  <N-1>
+  -- Pending Files:   1
+```
+
+3\. Fill the local database with temporary data that represents the production database before running the data migration file.
+
+4\. Run `atlas migrate apply` and ensure it was executed successfully.
+
+```shell
+atlas migrate apply \
+  --dir "file://my/project/migrations" \
+  -u "mysql://root:pass@localhost:3306/test"
+```
+
+Note, by using `atlas schema clean` you can clean the database you use for local development and repeat this process until the data migration file achieves the desired result.
+
+## Automatic Migrations
+
+In the declarative workflow, data migrations are implemented using Diff or Apply [Hooks](migrate.md#atlas-diff-and-apply-hooks). This is because, unlike the versioned option, migrations of this type do not hold a name or a version when they are applied. Therefore, when a data is written using hooks, the type of the `schema.Change` must be checked before its execution to ensure the data migration was not applied more than once.
+
+```markdown
+func FillNullValues(dbdialect string) schema.ApplyHook {
+    return func(next schema.Applier) schema.Applier {
+        return schema.ApplyFunc(func(ctx context.Context, conn dialect.ExecQuerier, plan *migrate.Plan) error {
+            // Search the schema.Change that triggers the data migration.
+            hasC := func() bool {
+                for _, c := range plan.Changes {
+                    m, ok := c.Source.(*schema.ModifyTable)
+                    if ok && m.T.Name == user.Table && schema.Changes(m.Changes).IndexModifyColumn(user.FieldName) != -1 {
+                        return true
+                    }
+                }
+                return false
+            }()
+            // Change was found, apply the data migration.
+            if hasC {
+                // At this stage, there are three ways to UPDATE the NULL values to "Unknown".
+                // Append a custom migrate.Change to migrate.Plan, execute an SQL statement
+                // directly on the dialect.ExecQuerier, or use the generated ent.Client.
+
+                // Create a temporary client from the migration connection.
+                client := ent.NewClient(
+                    ent.Driver(sql.NewDriver(dbdialect, sql.Conn{ExecQuerier: conn.(*sql.Tx)})),
+                )
+                if err := client.User.
+                    Update().
+                    SetName("Unknown").
+                    Where(user.NameIsNil()).
+                    Exec(ctx); err != nil {
+                    return err
+                }
+            }
+            return next.Apply(ctx, conn, plan)
+        })
+    }
+}
+```
+
+For more examples, check out the [Apply Hook](migrate.md#apply-hook-example) examples section.

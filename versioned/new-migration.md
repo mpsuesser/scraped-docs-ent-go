@@ -1,0 +1,79 @@
+---
+url: https://entgo.io/docs/versioned/new-migration
+title: "New Migration"
+description: ""
+access_date: 2026-08-03T17:26:33.758Z
+current_date: 2026-08-03T17:26:33.758Z
+---
+
+> [!-info] -info
+> Supporting repository
+> 
+> The change described in this section can be found in [PR #6](https://github.com/rotemtam/ent-versioned-migrations-demo/pull/6/files) in the supporting repository.
+
+In this section, we will discuss how to plan a new schema migration when we make a change to our project's Ent schema. Consider we want to add a new field to our `User` entity, adding a new optional field named `title`:
+
+```markdown
+// Fields of the User.
+func (User) Fields() []ent.Field {
+    return []ent.Field{
+        field.String("name"),
+        field.String("email"). // <-- Our new field
+            Unique(),
+        field.String("title").
+            Optional(),
+    }
+}
+```
+
+After adding the new field, we need to rerun code-gen for our project:
+
+```shell
+go generate ./...
+```
+
+Next, we need to create a new migration file for our change using the Atlas CLI:
+
+- MySQL
+- MariaDB
+- PostgreSQL
+- SQLite
+
+```shell
+atlas migrate diff add_user_title \
+  --dir "file://ent/migrate/migrations" \
+  --to "ent://ent/schema" \
+  --dev-url "docker://mysql/8/ent"
+```
+
+Observe a new file named `20221115101649_add_user_title.sql` was created under the `ent/migrate/migrations/` directory. This file contains the SQL statements to create the newly added `title` field in the `users` table:
+
+```sql
+-- modify "users" table
+ALTER TABLE \`users\` ADD COLUMN \`title\` varchar(255) NULL;
+```
+
+Great! We've successfully used the Atlas CLI to automatically generate a new migration file for our change.
+
+To apply the migration, we can run the following command:
+
+```shell
+atlas migrate apply --dir file://ent/migrate/migrations --url mysql://root:pass@localhost:3306/db
+```
+
+Atlas reports:
+
+```shell
+Migrating to version 20221115101649 from 20221114165732 (1 migrations in total):
+
+  -- migrating version 20221115101649
+    -> ALTER TABLE \`users\` ADD COLUMN \`title\` varchar(255) NULL;
+  -- ok (36.152277ms)
+
+  -------------------------
+  -- 44.1116ms
+  -- 1 migrations
+  -- 1 sql statements
+```
+
+In the next section, we will discuss how to plan custom schema migrations for our project.
