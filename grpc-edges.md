@@ -2,8 +2,8 @@
 url: https://entgo.io/docs/grpc-edges
 title: "Grpc Edges"
 description: ""
-access_date: 2026-08-03T19:08:51.282Z
-current_date: 2026-08-03T19:08:51.282Z
+access_date: 2026-08-03T19:39:02.137Z
+current_date: 2026-08-03T19:39:02.137Z
 ---
 
 Edges enable us to express the relationship between different entities in our ent application. Let's see how they work together with generated gRPC services.

@@ -2,8 +2,8 @@
 url: https://entgo.io/docs/ci
 title: "Ci"
 description: ""
-access_date: 2026-08-03T19:08:51.282Z
-current_date: 2026-08-03T19:08:51.282Z
+access_date: 2026-08-03T19:39:02.137Z
+current_date: 2026-08-03T19:39:02.137Z
 ---
 
 To ensure the quality of their software, teams often apply *Continuous Integration* workflows, commonly known as CI. With CI, teams continuously run a suite of automated verifications against every change to the code-base. During CI, teams may run many kinds of verifications:

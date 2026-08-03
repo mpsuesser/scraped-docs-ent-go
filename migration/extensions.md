@@ -2,8 +2,8 @@
 url: https://entgo.io/docs/migration/extensions
 title: "Extensions"
 description: ""
-access_date: 2026-08-03T19:08:51.282Z
-current_date: 2026-08-03T19:08:51.282Z
+access_date: 2026-08-03T19:39:02.137Z
+current_date: 2026-08-03T19:39:02.137Z
 ---
 
 [Postgres extensions](https://www.postgresql.org/docs/current/sql-createextension.html) are add-on modules that extend the functionality of the database by providing new data types, operators, functions, procedural languages, and more.

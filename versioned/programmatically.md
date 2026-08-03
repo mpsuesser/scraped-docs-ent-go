@@ -2,8 +2,8 @@
 url: https://entgo.io/docs/versioned/programmatically
 title: "Programmatically"
 description: ""
-access_date: 2026-08-03T19:08:51.282Z
-current_date: 2026-08-03T19:08:51.282Z
+access_date: 2026-08-03T19:39:02.137Z
+current_date: 2026-08-03T19:39:02.137Z
 ---
 
 In the previous sections, we saw how to use the Atlas CLI to generate migration files. However, we can also generate these files programmatically. In this section we will review how to write Go code that can be used for automatically planning migration files.

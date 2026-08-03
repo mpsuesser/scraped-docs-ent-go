@@ -2,8 +2,8 @@
 url: https://entgo.io/docs/migration/triggers
 title: "Triggers"
 description: ""
-access_date: 2026-08-03T19:08:51.282Z
-current_date: 2026-08-03T19:08:51.282Z
+access_date: 2026-08-03T19:39:02.137Z
+current_date: 2026-08-03T19:39:02.137Z
 ---
 
 Triggers are useful tools in relational databases that allow you to execute custom code when specific events occur on a table. For instance, triggers can automatically populate the audit log table whenever a new mutation is applied to a different table. This way we ensure that all changes (including those made by other applications) are meticulously recorded, enabling the enforcement on the database-level and reducing the need for additional code in the applications.

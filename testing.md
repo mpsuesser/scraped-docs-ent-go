@@ -2,8 +2,8 @@
 url: https://entgo.io/docs/testing
 title: "Testing"
 description: ""
-access_date: 2026-08-03T19:08:51.282Z
-current_date: 2026-08-03T19:08:51.282Z
+access_date: 2026-08-03T19:39:02.137Z
+current_date: 2026-08-03T19:39:02.137Z
 ---
 
 If you're using `ent.Client` in your unit-tests, you can use the generated `enttest` package for creating a client and auto-running the schema migration as follows:

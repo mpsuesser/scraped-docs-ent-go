@@ -2,8 +2,8 @@
 url: https://entgo.io/docs/writing-docs
 title: "Writing Docs"
 description: ""
-access_date: 2026-08-03T19:08:51.282Z
-current_date: 2026-08-03T19:08:51.282Z
+access_date: 2026-08-03T19:39:02.137Z
+current_date: 2026-08-03T19:39:02.137Z
 ---
 
 This document contains guidelines for contributing changes to the Ent documentation website.

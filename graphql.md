@@ -2,8 +2,8 @@
 url: https://entgo.io/docs/graphql
 title: "Graphql"
 description: ""
-access_date: 2026-08-03T19:08:51.282Z
-current_date: 2026-08-03T19:08:51.282Z
+access_date: 2026-08-03T19:39:02.137Z
+current_date: 2026-08-03T19:39:02.137Z
 ---
 
 The Ent framework supports GraphQL using the [99designs/gqlgen](https://github.com/99designs/gqlgen) library and provides various integrations, such as:

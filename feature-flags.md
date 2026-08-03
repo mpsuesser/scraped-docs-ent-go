@@ -2,8 +2,8 @@
 url: https://entgo.io/docs/feature-flags
 title: "Feature Flags"
 description: ""
-access_date: 2026-08-03T19:08:51.282Z
-current_date: 2026-08-03T19:08:51.282Z
+access_date: 2026-08-03T19:39:02.137Z
+current_date: 2026-08-03T19:39:02.137Z
 ---
 
 The framework provides a collection of code-generation features that be added or removed using flags.

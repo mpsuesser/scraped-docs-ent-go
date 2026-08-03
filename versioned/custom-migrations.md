@@ -2,8 +2,8 @@
 url: https://entgo.io/docs/versioned/custom-migrations
 title: "Custom Migrations"
 description: ""
-access_date: 2026-08-03T19:08:51.282Z
-current_date: 2026-08-03T19:08:51.282Z
+access_date: 2026-08-03T19:39:02.137Z
+current_date: 2026-08-03T19:39:02.137Z
 ---
 
 > **Supporting repository:**

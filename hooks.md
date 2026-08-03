@@ -2,8 +2,8 @@
 url: https://entgo.io/docs/hooks
 title: "Hooks"
 description: ""
-access_date: 2026-08-03T19:08:51.282Z
-current_date: 2026-08-03T19:08:51.282Z
+access_date: 2026-08-03T19:39:02.137Z
+current_date: 2026-08-03T19:39:02.137Z
 ---
 
 The `Hooks` option allows adding custom logic before and after operations that mutate the graph.
