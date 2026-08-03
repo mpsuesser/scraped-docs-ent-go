@@ -2,8 +2,8 @@
 url: https://entgo.io/docs/grpc-intro
 title: "Grpc Intro"
 description: ""
-access_date: 2026-08-03T19:39:02.137Z
-current_date: 2026-08-03T19:39:02.137Z
+access_date: 2026-08-03T19:44:05.110Z
+current_date: 2026-08-03T19:44:05.110Z
 ---
 
 [gRPC](https://grpc.io/) is a popular RPC framework open-sourced by Google, and based on an internal system developed there named "Stubby". It is based on [Protocol Buffers](https://developers.google.com/protocol-buffers), Google's language-neutral, platform-neutral extensible mechanism for serializing structured data.

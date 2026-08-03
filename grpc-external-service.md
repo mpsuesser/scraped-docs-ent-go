@@ -2,8 +2,8 @@
 url: https://entgo.io/docs/grpc-external-service
 title: "Grpc External Service"
 description: ""
-access_date: 2026-08-03T19:39:02.137Z
-current_date: 2026-08-03T19:39:02.137Z
+access_date: 2026-08-03T19:44:05.110Z
+current_date: 2026-08-03T19:44:05.110Z
 ---
 
 Oftentimes, you will want to include in your gRPC server, methods that are not automatically generated from your Ent schema. To achieve this result, define the methods in an additional service in an additional `.proto` file in your `entpb` directory.

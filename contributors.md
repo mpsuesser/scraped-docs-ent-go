@@ -2,8 +2,8 @@
 url: https://entgo.io/docs/contributors
 title: "Contributors"
 description: ""
-access_date: 2026-08-03T19:39:02.137Z
-current_date: 2026-08-03T19:39:02.137Z
+access_date: 2026-08-03T19:44:05.110Z
+current_date: 2026-08-03T19:44:05.110Z
 ---
 
 | [![Ariel Mashraki](https://avatars.githubusercontent.com/u/7413593?v=4?s=100)   <sub><b>Ariel Mashraki</b></sub>](https://github.com/a8m)   [📖](https://github.com/ent/ent/commits?author=a8m "Documentation") [💻](https://github.com/ent/ent/commits?author=a8m "Code") | [![Alex Snast](https://avatars.githubusercontent.com/u/987019?v=4?s=100)   <sub><b>Alex Snast</b></sub>](https://github.com/alexsn)   [💻](https://github.com/ent/ent/commits?author=alexsn "Code") | [![Rotem Tamir](https://avatars.githubusercontent.com/u/1522681?v=4?s=100)   <sub><b>Rotem Tamir</b></sub>](https://rotemtam.com/)   [📖](https://github.com/ent/ent/commits?author=rotemtam "Documentation") [💻](https://github.com/ent/ent/commits?author=rotemtam "Code") | [![Ciaran Liedeman](https://avatars.githubusercontent.com/u/3578740?v=4?s=100)   <sub><b>Ciaran Liedeman</b></sub>](https://github.com/cliedeman)   [💻](https://github.com/ent/ent/commits?author=cliedeman "Code") | [![Marwan Sulaiman](https://avatars.githubusercontent.com/u/16294261?v=4?s=100)   <sub><b>Marwan Sulaiman</b></sub>](https://www.marwan.io/)   [💻](https://github.com/ent/ent/commits?author=marwan-at-work "Code") | [![Nathaniel Peiffer](https://avatars.githubusercontent.com/u/8946502?v=4?s=100)   <sub><b>Nathaniel Peiffer</b></sub>](https://nathaniel.peiffer.com.au/)   [💻](https://github.com/ent/ent/commits?author=napei "Code") | [![Travis Cline](https://avatars.githubusercontent.com/u/3977?v=4?s=100)   <sub><b>Travis Cline</b></sub>](https://github.com/tmc)   [💻](https://github.com/ent/ent/commits?author=tmc "Code") |

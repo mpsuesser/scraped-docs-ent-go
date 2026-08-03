@@ -2,8 +2,8 @@
 url: https://entgo.io/docs/tutorial-todo-gql-schema-generator
 title: "Tutorial Todo Gql Schema Generator"
 description: ""
-access_date: 2026-08-03T19:39:02.137Z
-current_date: 2026-08-03T19:39:02.137Z
+access_date: 2026-08-03T19:44:05.110Z
+current_date: 2026-08-03T19:44:05.110Z
 ---
 
 In this section, we will continue the [GraphQL example](tutorial-todo-gql.md) by explaining how to generate a type-safe GraphQL schema from our `ent/schema`.

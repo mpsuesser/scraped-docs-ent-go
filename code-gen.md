@@ -2,8 +2,8 @@
 url: https://entgo.io/docs/code-gen
 title: "Code Gen"
 description: ""
-access_date: 2026-08-03T19:39:02.137Z
-current_date: 2026-08-03T19:39:02.137Z
+access_date: 2026-08-03T19:44:05.110Z
+current_date: 2026-08-03T19:44:05.110Z
 ---
 
 ## Installation

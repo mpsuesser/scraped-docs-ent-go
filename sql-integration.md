@@ -2,8 +2,8 @@
 url: https://entgo.io/docs/sql-integration
 title: "Sql Integration"
 description: ""
-access_date: 2026-08-03T19:39:02.137Z
-current_date: 2026-08-03T19:39:02.137Z
+access_date: 2026-08-03T19:44:05.110Z
+current_date: 2026-08-03T19:44:05.110Z
 ---
 
 The following examples show how to pass a custom `sql.DB` object to `ent.Client`.

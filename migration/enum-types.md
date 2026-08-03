@@ -2,8 +2,8 @@
 url: https://entgo.io/docs/migration/enum-types
 title: "Enum Types"
 description: ""
-access_date: 2026-08-03T19:39:02.137Z
-current_date: 2026-08-03T19:39:02.137Z
+access_date: 2026-08-03T19:44:05.110Z
+current_date: 2026-08-03T19:44:05.110Z
 ---
 
 Enum types are data structures that consist of a predefined, ordered set of values. By default, when using `field.Enum` in your Ent schema, Ent uses simple string types to represent the enum values in **PostgreSQL and SQLite**. However, in some cases, you may want to use the native enum types provided by the database.

@@ -2,8 +2,8 @@
 url: https://entgo.io/docs/migration/domain-types
 title: "Domain Types"
 description: ""
-access_date: 2026-08-03T19:39:02.137Z
-current_date: 2026-08-03T19:39:02.137Z
+access_date: 2026-08-03T19:44:05.110Z
+current_date: 2026-08-03T19:44:05.110Z
 ---
 
 PostgreSQL domain types are user-defined data types that extend existing ones, allowing you to add constraints that restrict the values they can hold. Setting a field type as a domain type enables you to enforce data integrity and validation rules at the database level.

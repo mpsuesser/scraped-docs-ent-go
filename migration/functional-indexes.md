@@ -2,8 +2,8 @@
 url: https://entgo.io/docs/migration/functional-indexes
 title: "Functional Indexes"
 description: ""
-access_date: 2026-08-03T19:39:02.137Z
-current_date: 2026-08-03T19:39:02.137Z
+access_date: 2026-08-03T19:44:05.110Z
+current_date: 2026-08-03T19:44:05.110Z
 ---
 
 A functional index is an index whose key parts are based on expression values, rather than column values. This index type is helpful for indexing the results of functions or expressions that are not stored in the table. Supported by [MySQL, MariaDB](https://atlasgo.io/guides/mysql/functional-indexes), [PostgreSQL](https://atlasgo.io/guides/postgres/functional-indexes) and [SQLite](https://atlasgo.io/guides/sqlite/functional-indexes).

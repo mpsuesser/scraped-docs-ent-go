@@ -2,8 +2,8 @@
 url: https://entgo.io/docs/migration/row-level-security
 title: "Row Level Security"
 description: ""
-access_date: 2026-08-03T19:39:02.137Z
-current_date: 2026-08-03T19:39:02.137Z
+access_date: 2026-08-03T19:44:05.110Z
+current_date: 2026-08-03T19:44:05.110Z
 ---
 
 Row-level security (RLS) in PostgreSQL enables tables to implement policies that limit access or modification of rows according to the user's role, enhancing the basic SQL-standard privileges provided by `GRANT`.

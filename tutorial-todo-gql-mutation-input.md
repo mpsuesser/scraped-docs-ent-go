@@ -2,8 +2,8 @@
 url: https://entgo.io/docs/tutorial-todo-gql-mutation-input
 title: "Tutorial Todo Gql Mutation Input"
 description: ""
-access_date: 2026-08-03T19:39:02.137Z
-current_date: 2026-08-03T19:39:02.137Z
+access_date: 2026-08-03T19:44:05.110Z
+current_date: 2026-08-03T19:44:05.110Z
 ---
 
 In this section, we continue the [GraphQL example](tutorial-todo-gql.md) by explaining how to extend the Ent code generator using Go templates and generate [input type](https://graphql.org/graphql-js/mutations-and-input-types/) objects for our GraphQL mutations that can be applied directly on Ent mutations.
