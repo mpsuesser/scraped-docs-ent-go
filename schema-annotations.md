@@ -2,8 +2,8 @@
 url: https://entgo.io/docs/schema-annotations
 title: "Schema Annotations"
 description: ""
-access_date: 2026-08-03T19:00:49.651Z
-current_date: 2026-08-03T19:00:49.651Z
+access_date: 2026-08-03T19:08:51.282Z
+current_date: 2026-08-03T19:08:51.282Z
 ---
 
 Schema annotations allow attaching metadata to schema objects like fields and edges and inject them to external templates. An annotation must be a Go type that is serializable to JSON raw value (e.g. struct, map or slice) and implement the [Annotation](https://pkg.go.dev/entgo.io/ent/schema?tab=doc#Annotation) interface.

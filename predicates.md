@@ -2,8 +2,8 @@
 url: https://entgo.io/docs/predicates
 title: "Predicates"
 description: ""
-access_date: 2026-08-03T19:00:49.651Z
-current_date: 2026-08-03T19:00:49.651Z
+access_date: 2026-08-03T19:08:51.282Z
+current_date: 2026-08-03T19:08:51.282Z
 ---
 
 ## Field Predicates
