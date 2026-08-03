@@ -2,8 +2,8 @@
 url: https://entgo.io/docs/getting-started
 title: "Getting Started"
 description: ""
-access_date: 2026-08-03T18:22:54.710Z
-current_date: 2026-08-03T18:22:54.710Z
+access_date: 2026-08-03T18:54:51.647Z
+current_date: 2026-08-03T18:54:51.647Z
 ---
 
 **ent** is a simple, yet powerful entity framework for Go, that makes it easy to build and maintain applications with large data-models and sticks with the following principles:

@@ -2,8 +2,8 @@
 url: https://entgo.io/docs/crud
 title: "Crud"
 description: ""
-access_date: 2026-08-03T18:22:54.710Z
-current_date: 2026-08-03T18:22:54.710Z
+access_date: 2026-08-03T18:54:51.647Z
+current_date: 2026-08-03T18:54:51.647Z
 ---
 
 As mentioned in the [introduction](code-gen.md) section, running `ent` on the schemas, will generate the following assets:

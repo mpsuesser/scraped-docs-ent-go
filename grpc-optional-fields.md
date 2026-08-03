@@ -2,8 +2,8 @@
 url: https://entgo.io/docs/grpc-optional-fields
 title: "Grpc Optional Fields"
 description: ""
-access_date: 2026-08-03T18:22:54.710Z
-current_date: 2026-08-03T18:22:54.710Z
+access_date: 2026-08-03T18:54:51.647Z
+current_date: 2026-08-03T18:54:51.647Z
 ---
 
 A common issue with Protobufs is that the way that nil values are represented: a zero-valued primitive field isn't encoded into the binary representation, this means that applications cannot distinguish between zero and not-set for primitive fields.

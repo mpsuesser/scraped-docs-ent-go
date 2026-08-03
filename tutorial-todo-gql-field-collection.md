@@ -2,8 +2,8 @@
 url: https://entgo.io/docs/tutorial-todo-gql-field-collection
 title: "Tutorial Todo Gql Field Collection"
 description: ""
-access_date: 2026-08-03T18:22:54.710Z
-current_date: 2026-08-03T18:22:54.710Z
+access_date: 2026-08-03T18:54:51.647Z
+current_date: 2026-08-03T18:54:51.647Z
 ---
 
 In this section, we continue our [GraphQL example](tutorial-todo-gql.md) by explaining how Ent implements [GraphQL Field Collection](https://spec.graphql.org/June2018/#sec-Field-Collection) for our GraphQL schema and solves the "N+1 Problem" in our resolvers.

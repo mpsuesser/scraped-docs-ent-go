@@ -2,8 +2,8 @@
 url: https://entgo.io/docs/multischema-migrations
 title: "Multischema Migrations"
 description: ""
-access_date: 2026-08-03T18:22:54.710Z
-current_date: 2026-08-03T18:22:54.710Z
+access_date: 2026-08-03T18:54:51.647Z
+current_date: 2026-08-03T18:54:51.647Z
 ---
 
 Using the [Atlas](https://atlasgo.io/) migration engine, an Ent schema can be defined and managed across multiple database schemas. This guides show how to achieve this with three simple steps:

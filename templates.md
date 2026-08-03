@@ -2,8 +2,8 @@
 url: https://entgo.io/docs/templates
 title: "External Templates"
 description: ""
-access_date: 2026-08-03T18:22:54.710Z
-current_date: 2026-08-03T18:22:54.710Z
+access_date: 2026-08-03T18:54:51.647Z
+current_date: 2026-08-03T18:54:51.647Z
 ---
 
 `ent` accepts external [Go templates](https://golang.org/pkg/text/template) to execute using the `--template` flag.

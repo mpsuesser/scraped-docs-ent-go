@@ -2,8 +2,8 @@
 url: https://entgo.io/docs/tutorial-todo-gql
 title: "Tutorial Todo Gql"
 description: ""
-access_date: 2026-08-03T18:22:54.710Z
-current_date: 2026-08-03T18:22:54.710Z
+access_date: 2026-08-03T18:54:51.647Z
+current_date: 2026-08-03T18:54:51.647Z
 ---
 
 In this tutorial, we will learn how to connect Ent to [GraphQL](https://graphql.org/) and set up the various integrations Ent provides, such as:

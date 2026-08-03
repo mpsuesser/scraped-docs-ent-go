@@ -2,8 +2,8 @@
 url: https://entgo.io/docs/privacy
 title: "Privacy"
 description: ""
-access_date: 2026-08-03T18:22:54.710Z
-current_date: 2026-08-03T18:22:54.710Z
+access_date: 2026-08-03T18:54:51.647Z
+current_date: 2026-08-03T18:54:51.647Z
 ---
 
 The `Policy` option in the schema allows configuring privacy policy for queries and mutations of entities in the database.

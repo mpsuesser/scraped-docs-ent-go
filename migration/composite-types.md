@@ -2,8 +2,8 @@
 url: https://entgo.io/docs/migration/composite-types
 title: "Composite Types"
 description: ""
-access_date: 2026-08-03T18:22:54.710Z
-current_date: 2026-08-03T18:22:54.710Z
+access_date: 2026-08-03T18:54:51.647Z
+current_date: 2026-08-03T18:54:51.647Z
 ---
 
 In PostgreSQL, a composite type is structured like a row or record, consisting of field names and their corresponding data types. Setting an Ent field as a composite type enables you to store complex and structured data in a single column.

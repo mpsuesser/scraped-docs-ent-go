@@ -2,8 +2,8 @@
 url: https://entgo.io/docs/tutorial-todo-crud
 title: "Tutorial Todo Crud"
 description: ""
-access_date: 2026-08-03T18:22:54.710Z
-current_date: 2026-08-03T18:22:54.710Z
+access_date: 2026-08-03T18:54:51.647Z
+current_date: 2026-08-03T18:54:51.647Z
 ---
 
 After setting up our project, we're ready to create our Todo list and query it.

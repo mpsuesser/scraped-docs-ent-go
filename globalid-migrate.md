@@ -2,8 +2,8 @@
 url: https://entgo.io/docs/globalid-migrate
 title: "Globalid Migrate"
 description: ""
-access_date: 2026-08-03T18:22:54.710Z
-current_date: 2026-08-03T18:22:54.710Z
+access_date: 2026-08-03T18:54:51.647Z
+current_date: 2026-08-03T18:54:51.647Z
 ---
 
 Prior to the baked-in global id feature flag, the migration tool had a `WithGlobalUniqueID` option that allowed users to migrate their schema to use globally unique ids. This option is now deprecated and users should use the global id feature flag instead. Existing users can migrate their schema to use globally unique ids by following the steps below.

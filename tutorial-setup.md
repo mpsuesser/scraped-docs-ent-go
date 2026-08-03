@@ -2,8 +2,8 @@
 url: https://entgo.io/docs/tutorial-setup
 title: "Tutorial Setup"
 description: ""
-access_date: 2026-08-03T18:22:54.710Z
-current_date: 2026-08-03T18:22:54.710Z
+access_date: 2026-08-03T18:54:51.647Z
+current_date: 2026-08-03T18:54:51.647Z
 ---
 
 This guide is intended for first-time users who want instructions on how to set up an Ent project from scratch. Before we get started, make sure you have the following prerequisites installed on your machine.

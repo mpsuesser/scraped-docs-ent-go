@@ -2,8 +2,8 @@
 url: https://entgo.io/docs/tutorial-todo-gql-filter-input
 title: "Tutorial Todo Gql Filter Input"
 description: ""
-access_date: 2026-08-03T18:22:54.710Z
-current_date: 2026-08-03T18:22:54.710Z
+access_date: 2026-08-03T18:54:51.647Z
+current_date: 2026-08-03T18:54:51.647Z
 ---
 
 In this section, we continue the [GraphQL example](tutorial-todo-gql.md) by explaining how to generate type-safe GraphQL filters (i.e. `Where` predicates) from our `ent/schema`, and allow users to seamlessly map GraphQL queries to Ent queries. For example, the following GraphQL query, maps to the Ent query below:
