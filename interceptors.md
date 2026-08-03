@@ -2,8 +2,8 @@
 url: https://entgo.io/docs/interceptors
 title: "Interceptors"
 description: ""
-access_date: 2026-08-03T18:12:34.399Z
-current_date: 2026-08-03T18:12:34.399Z
+access_date: 2026-08-03T18:22:54.710Z
+current_date: 2026-08-03T18:22:54.710Z
 ---
 
 Interceptors are execution middleware for various types of Ent queries. Contrary to hooks, interceptors are applied on the read-path and implemented as interfaces, allows them to intercept and modify the query at different stages, providing more fine-grained control over queries' behavior. For example, see the [Traverser interface](#defining-a-traverser) below.

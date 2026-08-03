@@ -2,8 +2,8 @@
 url: https://entgo.io/docs/versioned/intro
 title: "Intro"
 description: ""
-access_date: 2026-08-03T18:12:34.399Z
-current_date: 2026-08-03T18:12:34.399Z
+access_date: 2026-08-03T18:22:54.710Z
+current_date: 2026-08-03T18:22:54.710Z
 ---
 
 ## Schema Migration Flows

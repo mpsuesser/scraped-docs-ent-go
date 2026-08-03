@@ -2,8 +2,8 @@
 url: https://entgo.io/docs/data-migrations
 title: "Data Migrations"
 description: ""
-access_date: 2026-08-03T18:12:34.399Z
-current_date: 2026-08-03T18:12:34.399Z
+access_date: 2026-08-03T18:22:54.710Z
+current_date: 2026-08-03T18:22:54.710Z
 ---
 
 Migrations are usually used for changing the database schema, but in some cases, there is a need to modify the data stored in the database. For example, adding seed data, or back-filling empty columns with custom default values.

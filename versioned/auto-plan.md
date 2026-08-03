@@ -2,8 +2,8 @@
 url: https://entgo.io/docs/versioned/auto-plan
 title: "Auto Plan"
 description: ""
-access_date: 2026-08-03T18:12:34.399Z
-current_date: 2026-08-03T18:12:34.399Z
+access_date: 2026-08-03T18:22:54.710Z
+current_date: 2026-08-03T18:22:54.710Z
 ---
 
 One of the convenient features of Automatic Migrations is that developers do not need to write the SQL statements to create or modify the database schema. To achieve similar benefits, we will now add a script to our project that will automatically plan migration files for us based on the changes to our schema.

@@ -2,8 +2,8 @@
 url: https://entgo.io/docs/schema-views
 title: "Schema Views"
 description: ""
-access_date: 2026-08-03T18:12:34.399Z
-current_date: 2026-08-03T18:12:34.399Z
+access_date: 2026-08-03T18:22:54.710Z
+current_date: 2026-08-03T18:22:54.710Z
 ---
 
 Ent supports working with database views. Unlike regular Ent types (schemas), which are usually backed by tables, views act as "virtual tables" and their data results from a query. The following examples demonstrate how to define a `VIEW` in Ent. For more details on the different options, follow the rest of the guide.
