@@ -2,16 +2,15 @@
 url: https://entgo.io/docs/migration/functional-indexes
 title: "Functional Indexes"
 description: ""
-access_date: 2026-08-03T17:26:33.758Z
-current_date: 2026-08-03T17:26:33.758Z
+access_date: 2026-08-03T18:12:34.399Z
+current_date: 2026-08-03T18:12:34.399Z
 ---
 
 A functional index is an index whose key parts are based on expression values, rather than column values. This index type is helpful for indexing the results of functions or expressions that are not stored in the table. Supported by [MySQL, MariaDB](https://atlasgo.io/guides/mysql/functional-indexes), [PostgreSQL](https://atlasgo.io/guides/postgres/functional-indexes) and [SQLite](https://atlasgo.io/guides/sqlite/functional-indexes).
 
 This guide explains how to extend your Ent schema with functional indexes, and configure the schema migration to manage both functional indexes and the Ent schema as a single migration unit using Atlas.
 
-> [!-info] -info
-> [Atlas Pro Feature](https://atlasgo.io/features#pro-plan)
+> **Atlas Pro Feature:**
 > 
 > Atlas support for [Composite Schema](https://atlasgo.io/atlas-schema/projects#data-source-composite_schema) used in this guide is available exclusively to Pro users. To use this feature, run:
 > 
@@ -23,14 +22,37 @@ This guide explains how to extend your Ent schema with functional indexes, and c
 
 To install the latest release of Atlas, simply run one of the following commands in your terminal, or check out the [Atlas website](https://atlasgo.io/getting-started#installation):
 
-- macOS + Linux
-- Homebrew
-- Docker
-- Windows
+#### macOS + Linux
 
 ```shell
 curl -sSf https://atlasgo.sh | sh
 ```
+
+#### Homebrew
+
+```shell
+brew install ariga/tap/atlas
+```
+
+#### Docker
+
+```shell
+docker pull arigaio/atlas
+docker run --rm arigaio/atlas --help
+```
+
+If the container needs access to the host network or a local directory, use the `--net=host` flag and mount the desired directory:
+
+```shell
+docker run --rm --net=host \
+  -v $(pwd)/migrations:/migrations \
+  arigaio/atlas migrate apply
+  --url "mysql://root:pass@:3306/test"
+```
+
+#### Windows
+
+Download the [latest release](https://release.ariga.io/atlas/atlas-windows-amd64-latest.exe) and move the atlas binary to a file location on your system PATH.
 
 ## Login to Atlas
 
@@ -143,8 +165,7 @@ atlas migrate apply \
   --url "postgres://postgres:pass@localhost:5432/database?search_path=public&sslmode=disable"
 ```
 
-> [!-info] -info
-> Apply the Schema Directly on the Database
+> **Apply the Schema Directly on the Database:**
 > 
 > Sometimes, there is a need to apply the schema directly to the database without generating a migration file. For example, when experimenting with schema changes, spinning up a database for testing, etc. In such cases, you can use the command below to apply the schema directly to the database:
 > 

@@ -2,8 +2,8 @@
 url: https://entgo.io/docs/generating-ent-schemas
 title: "Generating Ent Schemas"
 description: ""
-access_date: 2026-08-03T17:26:33.758Z
-current_date: 2026-08-03T17:26:33.758Z
+access_date: 2026-08-03T18:12:34.399Z
+current_date: 2026-08-03T18:12:34.399Z
 ---
 
 ## Introduction

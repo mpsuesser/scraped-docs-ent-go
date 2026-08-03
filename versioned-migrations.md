@@ -2,8 +2,8 @@
 url: https://entgo.io/docs/versioned-migrations
 title: "Versioned Migrations"
 description: ""
-access_date: 2026-08-03T17:26:33.758Z
-current_date: 2026-08-03T17:26:33.758Z
+access_date: 2026-08-03T18:12:34.399Z
+current_date: 2026-08-03T18:12:34.399Z
 ---
 
 ## Quick Guide
@@ -14,16 +14,41 @@ Here are a few quick steps that explain how to auto-generate and execute migrati
 
 To install the latest release of Atlas, simply run one of the following commands in your terminal, or check out the [Atlas website](https://atlasgo.io/getting-started#installation):
 
+#### macOS + Linux
+
 ```shell
 curl -sSf https://atlasgo.sh | sh
 ```
 
+#### Homebrew
+
+```shell
+brew install ariga/tap/atlas
+```
+
+#### Docker
+
+```shell
+docker pull arigaio/atlas
+docker run --rm arigaio/atlas --help
+```
+
+If the container needs access to the host network or a local directory, use the `--net=host` flag and mount the desired directory:
+
+```shell
+docker run --rm --net=host \
+  -v $(pwd)/migrations:/migrations \
+  arigaio/atlas migrate apply
+  --url "mysql://root:pass@:3306/test"
+```
+
+#### Windows
+
+Download the [latest release](https://release.ariga.io/atlas/atlas-windows-amd64-latest.exe) and move the atlas binary to a file location on your system PATH.
+
 Then, run the following command to automatically generate migration files for your Ent schema:
 
-- MySQL
-- MariaDB
-- PostgreSQL
-- SQLite
+#### MySQL
 
 ```shell
 atlas migrate diff migration_name \
@@ -32,8 +57,34 @@ atlas migrate diff migration_name \
   --dev-url "docker://mysql/8/ent"
 ```
 
-> [!-info] -info
-> The role of the [dev database](https://atlasgo.io/concepts/dev-database)
+#### MariaDB
+
+```shell
+atlas migrate diff migration_name \
+  --dir "file://ent/migrate/migrations" \
+  --to "ent://ent/schema" \
+  --dev-url "docker://mariadb/latest/test"
+```
+
+#### PostgreSQL
+
+```shell
+atlas migrate diff migration_name \
+  --dir "file://ent/migrate/migrations" \
+  --to "ent://ent/schema" \
+  --dev-url "docker://postgres/15/test?search_path=public"
+```
+
+#### SQLite
+
+```shell
+atlas migrate diff migration_name \
+  --dir "file://ent/migrate/migrations" \
+  --to "ent://ent/schema" \
+  --dev-url "sqlite://file?mode=memory&_fk=1"
+```
+
+> **The role of the dev database:**
 > 
 > Atlas loads the **current state** by executing the SQL files stored in the migration directory onto the provided [dev database](https://atlasgo.io/concepts/dev-database). It then compares this state against the **desired state** defined by the `ent/schema` package and writes a migration plan for moving from the current state to the desired state.
 
@@ -41,15 +92,36 @@ atlas migrate diff migration_name \
 
 To apply the pending migration files onto the database, run the following command:
 
-- MySQL
-- MariaDB
-- PostgreSQL
-- SQLite
+#### MySQL
 
 ```shell
 atlas migrate apply \
   --dir "file://ent/migrate/migrations" \
   --url "mysql://root:pass@localhost:3306/example"
+```
+
+#### MariaDB
+
+```shell
+atlas migrate apply \
+  --dir "file://ent/migrate/migrations" \
+  --url "maria://root:pass@localhost:3306/example"
+```
+
+#### PostgreSQL
+
+```shell
+atlas migrate apply \
+  --dir "file://ent/migrate/migrations" \
+  --url "postgres://postgres:pass@localhost:5432/database?search_path=public&sslmode=disable"
+```
+
+#### SQLite
+
+```shell
+atlas migrate apply \
+  --dir "file://ent/migrate/migrations" \
+  --url "sqlite://file.db?_fk=1"
 ```
 
 For more information head over to the [Atlas documentation](https://atlasgo.io/versioned/apply).
@@ -58,15 +130,36 @@ For more information head over to the [Atlas documentation](https://atlasgo.io/v
 
 Use the following command to get detailed information about the migration status of the connected database:
 
-- MySQL
-- MariaDB
-- PostgreSQL
-- SQLite
+#### MySQL
 
 ```shell
 atlas migrate status \
   --dir "file://ent/migrate/migrations" \
   --url "mysql://root:pass@localhost:3306/example"
+```
+
+#### MariaDB
+
+```shell
+atlas migrate status \
+  --dir "file://ent/migrate/migrations" \
+  --url "maria://root:pass@localhost:3306/example"
+```
+
+#### PostgreSQL
+
+```shell
+atlas migrate status \
+  --dir "file://ent/migrate/migrations" \
+  --url "postgres://postgres:pass@localhost:5432/database?search_path=public&sslmode=disable"
+```
+
+#### SQLite
+
+```shell
+atlas migrate status \
+  --dir "file://ent/migrate/migrations" \
+  --url "sqlite://file.db?_fk=1"
 ```
 
 ## In Depth Guide
@@ -91,10 +184,7 @@ In order to automatically generate migration files, you can use one of the two a
 
 #### Option 1: Use the atlas migrate diff command
 
-- MySQL
-- MariaDB
-- PostgreSQL
-- SQLite
+#### MySQL
 
 ```shell
 atlas migrate diff migration_name \
@@ -103,19 +193,53 @@ atlas migrate diff migration_name \
   --dev-url "docker://mysql/8/ent"
 ```
 
-> [!-secondary] -secondary
-> note
+#### MariaDB
+
+```shell
+atlas migrate diff migration_name \
+  --dir "file://ent/migrate/migrations" \
+  --to "ent://ent/schema" \
+  --dev-url "docker://mariadb/latest/test"
+```
+
+#### PostgreSQL
+
+```shell
+atlas migrate diff migration_name \
+  --dir "file://ent/migrate/migrations" \
+  --to "ent://ent/schema" \
+  --dev-url "docker://postgres/15/test?search_path=public"
+```
+
+#### SQLite
+
+```shell
+atlas migrate diff migration_name \
+  --dir "file://ent/migrate/migrations" \
+  --to "ent://ent/schema" \
+  --dev-url "sqlite://file?mode=memory&_fk=1"
+```
+
+> **Note:**
 > 
 > To enable the [`GlobalUniqueID`](migrate.md#universal-ids) option in versioned migration, append the query parameter `globalid=1` to the desired state. For example: `--to "ent://ent/schema?globalid=1"`.
 
 Run `ls ent/migrate/migrations` after the command above was passed successfully, and you will notice Atlas created 2 files:
 
-- 20220811114629\_create\_users.sql
-- atlas.sum
+#### 20220811114629\_create\_users.sql
 
 ```sql
 -- create "users" table
 CREATE TABLE \`users\` (\`id\` bigint NOT NULL AUTO_INCREMENT, PRIMARY KEY (\`id\`)) CHARSET utf8mb4 COLLATE utf8mb4_bin;
+```
+
+#### atlas.sum
+
+In addition to the migration directory, Atlas maintains a file name `atlas.sum` which is used to ensure the integrity of the migration directory and force developers to deal with situations where migration order or contents were modified after the fact.
+
+```markdown
+h1:vj6fBSDiLEwe+jGdHQvM2NU8G70lAfXwmI+zkyrxMnk=
+20220811114629_create_users.sql h1:wrm4K8GSucW6uMJX7XfmfoVPhyzz3vN5CnU1mam2Y4c=
 ```
 
 Head over to the [Applying Migration Files](#apply-migration-files) section to learn how to execute the generated migration files onto the database.
@@ -124,8 +248,7 @@ Head over to the [Applying Migration Files](#apply-migration-files) section to l
 
 The first step is to enable the versioned migration feature by passing in the `sql/versioned-migration` feature flag. Depending on how you execute the Ent code generator, you have to use one of the two options:
 
-- Using Ent CLI
-- Using the entc package
+#### Using Ent CLI
 
 If you are using the default go generate configuration, simply add the `--feature sql/versioned-migration` to the `ent/generate.go` file as follows:
 
@@ -135,26 +258,57 @@ package ent
 //go:generate go run -mod=mod entgo.io/ent/cmd/ent generate --feature sql/versioned-migration ./schema
 ```
 
+#### Using the entc package
+
+If you are using the code generation package (e.g. if you are using an Ent extension like `entgql`), add the feature flag as follows:
+
+```markdown
+//go:build ignore
+
+package main
+
+import (
+    "log"
+
+    "entgo.io/ent/entc"
+    "entgo.io/ent/entc/gen"
+)
+
+func main() {
+    err := entc.Generate("./schema", &gen.Config{
+        Features: []gen.Feature{gen.FeatureVersionedMigration},
+    })
+    if err != nil {
+        log.Fatalf("running ent codegen: %v", err)
+    }
+}
+```
+
 After running code generation using `go generate`, the new methods for creating migration files were added to your `ent/migrate` package. The next steps are:
 
 1\. Provide a URL to an Atlas [dev database](https://atlasgo.io/concepts/dev-database) to replay the migration directory and compute the **current** state. Let's use `docker` for running a local database container:
 
-- MySQL
-- MariaDB
-- PostgreSQL
+#### MySQL
 
 ```bash
 docker run --name migration --rm -p 3306:3306 -e MYSQL_ROOT_PASSWORD=pass -e MYSQL_DATABASE=test -d mysql
 ```
 
+#### MariaDB
+
+```bash
+docker run --name migration --rm -p 3306:3306 -e MYSQL_ROOT_PASSWORD=pass -e MYSQL_DATABASE=test -d mariadb
+```
+
+#### PostgreSQL
+
+```bash
+docker run --name migration --rm -p 5432:5432 -e POSTGRES_PASSWORD=pass -e POSTGRES_DB=test -d postgres
+```
+
 2\. Create a file named `main.go` and a directory named `migrations` under the `ent/migrate` package and customize the migration generation for your project.
 
-- Atlas
-- golang-migrate/migrate
-- pressly/goose
-- amacneil/dbmate
-- Flyway
-- Liquibase
+#### Atlas
 
 ```markdown
 //go:build ignore
@@ -199,6 +353,226 @@ func main() {
 }
 ```
 
+#### golang-migrate/migrate
+
+```markdown
+//go:build ignore
+
+package main
+
+import (
+    "context"
+    "log"
+    "os"
+
+    "<project>/ent/migrate"
+
+    "ariga.io/atlas/sql/sqltool"
+    "entgo.io/ent/dialect"
+    "entgo.io/ent/dialect/sql/schema"
+    _ "github.com/go-sql-driver/mysql"
+)
+
+func main() {
+    ctx := context.Background()
+    // Create a local migration directory able to understand golang-migrate migration file format for replay.
+    dir, err := sqltool.NewGolangMigrateDir("ent/migrate/migrations")
+    if err != nil {
+        log.Fatalf("failed creating atlas migration directory: %v", err)
+    }
+    // Migrate diff options.
+    opts := []schema.MigrateOption{
+        schema.WithDir(dir),                         // provide migration directory
+        schema.WithMigrationMode(schema.ModeReplay), // provide migration mode
+        schema.WithDialect(dialect.MySQL),           // Ent dialect to use
+    }
+    if len(os.Args) != 2 {
+        log.Fatalln("migration name is required. Use: 'go run -mod=mod ent/migrate/main.go <name>'")
+    }
+    // Generate migrations using Atlas support for MySQL (note the Ent dialect option passed above).
+    err = migrate.NamedDiff(ctx, "mysql://root:pass@localhost:3306/test", os.Args[1], opts...)
+    if err != nil {
+        log.Fatalf("failed generating migration file: %v", err)
+    }
+}
+```
+
+#### pressly/goose
+
+```markdown
+//go:build ignore
+
+package main
+
+import (
+    "context"
+    "log"
+    "os"
+
+    "<project>/ent/migrate"
+
+    "ariga.io/atlas/sql/sqltool"
+    "entgo.io/ent/dialect"
+    "entgo.io/ent/dialect/sql/schema"
+    _ "github.com/go-sql-driver/mysql"
+)
+
+func main() {
+    ctx := context.Background()
+    // Create a local migration directory able to understand goose migration file format for replay.
+    dir, err := sqltool.NewGooseDir("ent/migrate/migrations")
+    if err != nil {
+        log.Fatalf("failed creating atlas migration directory: %v", err)
+    }
+    // Migrate diff options.
+    opts := []schema.MigrateOption{
+        schema.WithDir(dir),                         // provide migration directory
+        schema.WithMigrationMode(schema.ModeReplay), // provide migration mode
+        schema.WithDialect(dialect.MySQL),           // Ent dialect to use
+    }
+    if len(os.Args) != 2 {
+        log.Fatalln("migration name is required. Use: 'go run -mod=mod ent/migrate/main.go <name>'")
+    }
+    // Generate migrations using Atlas support for MySQL (note the Ent dialect option passed above).
+    err = migrate.NamedDiff(ctx, "mysql://root:pass@localhost:3306/test", os.Args[1], opts...)
+    if err != nil {
+        log.Fatalf("failed generating migration file: %v", err)
+    }
+}
+```
+
+#### amacneil/dbmate
+
+```markdown
+//go:build ignore
+
+package main
+
+import (
+    "context"
+    "log"
+    "os"
+
+    "<project>/ent/migrate"
+
+    "ariga.io/atlas/sql/sqltool"
+    "entgo.io/ent/dialect"
+    "entgo.io/ent/dialect/sql/schema"
+    _ "github.com/go-sql-driver/mysql"
+)
+
+func main() {
+    ctx := context.Background()
+    // Create a local migration directory able to understand dbmate migration file format for replay.
+    dir, err := sqltool.NewDBMateDir("ent/migrate/migrations")
+    if err != nil {
+        log.Fatalf("failed creating atlas migration directory: %v", err)
+    }
+    // Migrate diff options.
+    opts := []schema.MigrateOption{
+        schema.WithDir(dir),                         // provide migration directory
+        schema.WithMigrationMode(schema.ModeReplay), // provide migration mode
+        schema.WithDialect(dialect.MySQL),           // Ent dialect to use
+    }
+    if len(os.Args) != 2 {
+        log.Fatalln("migration name is required. Use: 'go run -mod=mod ent/migrate/main.go <name>'")
+    }
+    // Generate migrations using Atlas support for MySQL (note the Ent dialect option passed above).
+    err = migrate.NamedDiff(ctx, "mysql://root:pass@localhost:3306/test", os.Args[1], opts...)
+    if err != nil {
+        log.Fatalf("failed generating migration file: %v", err)
+    }
+}
+```
+
+#### Flyway
+
+```markdown
+//go:build ignore
+
+package main
+
+import (
+    "context"
+    "log"
+    "os"
+
+    "<project>/ent/migrate"
+
+    "ariga.io/atlas/sql/sqltool"
+    "entgo.io/ent/dialect"
+    "entgo.io/ent/dialect/sql/schema"
+    _ "github.com/go-sql-driver/mysql"
+)
+
+func main() {
+    ctx := context.Background()
+    // Create a local migration directory able to understand Flyway migration file format for replay.
+    dir, err := sqltool.NewFlywayDir("ent/migrate/migrations")
+    if err != nil {
+        log.Fatalf("failed creating atlas migration directory: %v", err)
+    }
+    // Migrate diff options.
+    opts := []schema.MigrateOption{
+        schema.WithDir(dir),                         // provide migration directory
+        schema.WithMigrationMode(schema.ModeReplay), // provide migration mode
+        schema.WithDialect(dialect.MySQL),           // Ent dialect to use
+    }
+    if len(os.Args) != 2 {
+        log.Fatalln("migration name is required. Use: 'go run -mod=mod ent/migrate/main.go <name>'")
+    }
+    // Generate migrations using Atlas support for MySQL (note the Ent dialect option passed above).
+    err = migrate.NamedDiff(ctx, "mysql://root:pass@localhost:3306/test", os.Args[1], opts...)
+    if err != nil {
+        log.Fatalf("failed generating migration file: %v", err)
+    }
+}
+```
+
+#### Liquibase
+
+```markdown
+//go:build ignore
+
+package main
+
+import (
+    "context"
+    "log"
+    "os"
+
+    "<project>/ent/migrate"
+
+    "ariga.io/atlas/sql/sqltool"
+    "entgo.io/ent/dialect"
+    "entgo.io/ent/dialect/sql/schema"
+    _ "github.com/go-sql-driver/mysql"
+)
+
+func main() {
+    ctx := context.Background()
+    // Create a local migration directory able to understand Liquibase migration file format for replay.
+    dir, err := sqltool.NewLiquibaseDir("ent/migrate/migrations")
+    if err != nil {
+        log.Fatalf("failed creating atlas migration directory: %v", err)
+    }
+    // Migrate diff options.
+    opts := []schema.MigrateOption{
+        schema.WithDir(dir),                         // provide migration directory
+        schema.WithMigrationMode(schema.ModeReplay), // provide migration mode
+        schema.WithDialect(dialect.MySQL),           // Ent dialect to use
+    }
+    if len(os.Args) != 2 {
+        log.Fatalln("migration name is required. Use: 'go run -mod=mod ent/migrate/main.go <name>'")
+    }
+    // Generate migrations using Atlas support for MySQL (note the Ent dialect option passed above).
+    err = migrate.NamedDiff(ctx, "mysql://root:pass@localhost:3306/test", os.Args[1], opts...)
+    if err != nil {
+        log.Fatalf("failed generating migration file: %v", err)
+    }
+}
+```
+
 3\. Trigger migration generation by executing `go run -mod=mod ent/migrate/main.go <name>` from the root of the project. For example:
 
 ```bash
@@ -207,12 +581,20 @@ go run -mod=mod ent/migrate/main.go create_users
 
 Run `ls ent/migrate/migrations` after the command above was passed successfully, and you will notice Atlas created 2 files:
 
-- 20220811114629\_create\_users.sql
-- atlas.sum
+#### 20220811114629\_create\_users.sql
 
 ```sql
 -- create "users" table
 CREATE TABLE \`users\` (\`id\` bigint NOT NULL AUTO_INCREMENT, PRIMARY KEY (\`id\`)) CHARSET utf8mb4 COLLATE utf8mb4_bin;
+```
+
+#### atlas.sum
+
+In addition to the migration directory, Atlas maintains a file name `atlas.sum` which is used to ensure the integrity of the migration directory and force developers to deal with situations where migration order or contents were modified after the fact.
+
+```markdown
+h1:vj6fBSDiLEwe+jGdHQvM2NU8G70lAfXwmI+zkyrxMnk=
+20220811114629_create_users.sql h1:wrm4K8GSucW6uMJX7XfmfoVPhyzz3vN5CnU1mam2Y4c=
 ```
 
 The full reference example exists in [GitHub repository](https://github.com/ent/ent/tree/master/examples/migration).
@@ -238,20 +620,72 @@ Let's run `atlas migrate lint` with the necessary parameters to run migration li
 
 To install the latest release of Atlas, simply run one of the following commands in your terminal, or check out the [Atlas website](https://atlasgo.io/getting-started#installation):
 
+#### macOS + Linux
+
 ```shell
 curl -sSf https://atlasgo.sh | sh
 ```
 
+#### Homebrew
+
+```shell
+brew install ariga/tap/atlas
+```
+
+#### Docker
+
+```shell
+docker pull arigaio/atlas
+docker run --rm arigaio/atlas --help
+```
+
+If the container needs access to the host network or a local directory, use the `--net=host` flag and mount the desired directory:
+
+```shell
+docker run --rm --net=host \
+  -v $(pwd)/migrations:/migrations \
+  arigaio/atlas migrate apply
+  --url "mysql://root:pass@:3306/test"
+```
+
+#### Windows
+
+Download the [latest release](https://release.ariga.io/atlas/atlas-windows-amd64-latest.exe) and move the atlas binary to a file location on your system PATH.
+
 #### Run the atlas migrate lint command:
 
-- MySQL
-- MariaDB
-- PostgreSQL
-- SQLite
+#### MySQL
 
 ```shell
 atlas migrate lint \
   --dev-url="docker://mysql/8/test" \
+  --dir="file://ent/migrate/migrations" \
+  --latest=1
+```
+
+#### MariaDB
+
+```shell
+atlas migrate lint \
+  --dev-url="docker://mariadb/latest/test" \
+  --dir="file://ent/migrate/migrations" \
+  --latest=1
+```
+
+#### PostgreSQL
+
+```shell
+atlas migrate lint \
+  --dev-url="docker://postgres/15/test?search_path=public" \
+  --dir="file://ent/migrate/migrations" \
+  --latest=1
+```
+
+#### SQLite
+
+```shell
+atlas migrate lint \
+  --dev-url="sqlite://file?mode=memory" \
   --dir="file://ent/migrate/migrations" \
   --latest=1
 ```
@@ -308,8 +742,7 @@ func main() {
 }
 ```
 
-> [!-warning] -warning
-> Important
+> **Important:**
 > 
 > After an upgrade to MySQL 8 from a previous version, you still have to run the method once to update the starting values. Since MySQL 8 the counter is no longer only stored in memory, meaning subsequent calls to the method are no longer needed after the first one.
 
@@ -317,10 +750,7 @@ func main() {
 
 Ent recommends to use the Atlas CLI to apply the generated migration files onto the database. If you want to use any other migration management tool, Ent has support for generating migrations for several of them out of the box.
 
-- MySQL
-- MariaDB
-- PostgreSQL
-- SQLite
+#### MySQL
 
 ```shell
 atlas migrate apply \
@@ -328,10 +758,33 @@ atlas migrate apply \
   --url "mysql://root:pass@localhost:3306/example"
 ```
 
+#### MariaDB
+
+```shell
+atlas migrate apply \
+  --dir "file://ent/migrate/migrations" \
+  --url "maria://root:pass@localhost:3306/example"
+```
+
+#### PostgreSQL
+
+```shell
+atlas migrate apply \
+  --dir "file://ent/migrate/migrations" \
+  --url "postgres://postgres:pass@localhost:5432/database?search_path=public&sslmode=disable"
+```
+
+#### SQLite
+
+```shell
+atlas migrate apply \
+  --dir "file://ent/migrate/migrations" \
+  --url "sqlite://file.db?_fk=1"
+```
+
 For more information head over to the [Atlas documentation](https://atlasgo.io/versioned/apply).
 
-> [!-info] -info
-> info
+> **Info:**
 > 
 > In previous versions of Ent [`golang-migrate/migrate`](https://github.com/golang-migrate/migrate) has been the default migration execution engine. For an easy transition, Atlas can import the migrations format of golang-migrate for you. You can learn more about it in the [Atlas documentation](https://atlasgo.io/versioned/import).
 
@@ -422,8 +875,7 @@ h1:KRFsSi68ZOarsQAJZ1mfSiMSkIOZlMq4RzyF//Pwf8A=
 
 The `atlas.sum` file contains the checksum of each migration file (implemented by a reverse, one branch merkle hash tree), and a sum of all files. Adding new files results in a change to the sum file, which will raise merge conflicts in most version controls systems. Let's see how we can use the **Migration Directory Integrity File** to detect the case from above automatically.
 
-> [!-secondary] -secondary
-> note
+> **Note:**
 > 
 > Please note, that you need to have the Atlas CLI installed in your system for this to work, so make sure to follow the [installation instructions](https://atlasgo.io/cli/getting-started/setting-up#install-the-cli) before proceeding.
 

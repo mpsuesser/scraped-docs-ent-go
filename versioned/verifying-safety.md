@@ -2,12 +2,11 @@
 url: https://entgo.io/docs/versioned/verifying-safety
 title: "Verifying Safety"
 description: ""
-access_date: 2026-08-03T17:26:33.758Z
-current_date: 2026-08-03T17:26:33.758Z
+access_date: 2026-08-03T18:12:34.399Z
+current_date: 2026-08-03T18:12:34.399Z
 ---
 
-> [!-info] -info
-> Supporting repository
+> **Supporting repository:**
 > 
 > The change described in this section can be found in [PR #8](https://github.com/rotemtam/ent-versioned-migrations-demo/pull/8/files) in the supporting repository.
 
@@ -39,16 +38,40 @@ go generate ./...
 
 Next, let's automatically generate a new migration:
 
-- MySQL
-- MariaDB
-- PostgreSQL
-- SQLite
+#### MySQL
 
 ```shell
 atlas migrate diff user_title_required \
   --dir "file://ent/migrate/migrations" \
   --to "ent://ent/schema" \
   --dev-url "docker://mysql/8/ent"
+```
+
+#### MariaDB
+
+```shell
+atlas migrate diff user_title_required \
+  --dir "file://ent/migrate/migrations" \
+  --to "ent://ent/schema" \
+  --dev-url "docker://mariadb/latest/test"
+```
+
+#### PostgreSQL
+
+```shell
+atlas migrate diff user_title_required \
+  --dir "file://ent/migrate/migrations" \
+  --to "ent://ent/schema" \
+  --dev-url "docker://postgres/15/test?search_path=public"
+```
+
+#### SQLite
+
+```shell
+atlas migrate diff user_title_required \
+  --dir "file://ent/migrate/migrations" \
+  --to "ent://ent/schema" \
+  --dev-url "sqlite://file?mode=memory&_fk=1"
 ```
 
 A new migration file was created in the `ent/migrate/migrations` directory:
@@ -179,3 +202,5 @@ This wraps up our tutorial on how to upgrade your Ent project from automatic mig
 - Verify migrations safely using `atlas migrate lint`
 
 In the next steps
+
+> **For more Ent news and updates::**

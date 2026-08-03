@@ -2,8 +2,8 @@
 url: https://entgo.io/docs/tutorial-todo-gql-paginate
 title: "Tutorial Todo Gql Paginate"
 description: ""
-access_date: 2026-08-03T17:26:33.758Z
-current_date: 2026-08-03T17:26:33.758Z
+access_date: 2026-08-03T18:12:34.399Z
+current_date: 2026-08-03T18:12:34.399Z
 ---
 
 In this section, we continue the [GraphQL example](tutorial-todo-gql.md) by explaining how to implement the [Relay Cursor Connections Spec](https://relay.dev/graphql/connections.htm). If you're not familiar with the Cursor Connections interface, read the following paragraphs that were taken from [relay.dev](https://relay.dev/graphql/connections.htm#sel-DABDDDAADFA0E3kM):
@@ -113,8 +113,7 @@ func (Todo) Edges() []ent.Edge {
 }
 ```
 
-> [!-info] -info
-> info
+> **Info:**
 > 
 > The naming convention for this ordering term is: `UPPER(<edge-name>)_COUNT`. For example, `CHILDREN_COUNT` or `POSTS_COUNT`.
 
@@ -150,8 +149,7 @@ func (Todo) Edges() []ent.Edge {
 }
 ```
 
-> [!-info] -info
-> info
+> **Info:**
 > 
 > The naming convention for this ordering term is: `UPPER(<edge-name>)_<edge-field>`. For example, `PARENT_PRIORITY` or `AUTHOR_NAME`.
 
@@ -180,8 +178,7 @@ func (r *queryResolver) Todos(ctx context.Context, after *ent.Cursor, first *int
 }
 ```
 
-> [!-info] -info
-> Relay Connection Configuration
+> **Relay Connection Configuration:**
 > 
 > The `entgql.RelayConnection()` function indicates that the node or edge should support pagination. Hence,the returned result is a Relay connection rather than a list of nodes (`[T!]!` => `<T>Connection!`).
 > 

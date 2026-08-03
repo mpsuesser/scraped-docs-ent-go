@@ -2,8 +2,8 @@
 url: https://entgo.io/docs/paging
 title: "Paging"
 description: ""
-access_date: 2026-08-03T17:26:33.758Z
-current_date: 2026-08-03T17:26:33.758Z
+access_date: 2026-08-03T18:12:34.399Z
+current_date: 2026-08-03T18:12:34.399Z
 ---
 
 ## Limit
@@ -180,14 +180,38 @@ names, err := client.Pet.Query().
 
 The [`sqljson`](https://pkg.go.dev/entgo.io/ent/dialect/sql/sqljson) package allows to easily sort data based on the value of a JSON object:
 
-- By Value
-- By Length
-- Descending
+#### By Value
 
 ```markdown
 users := client.User.Query().
     Order(
         sqljson.OrderValue(user.FieldData, sqljson.Path("key1", "key2")),
+    ).
+    AllX(ctx)
+```
+
+#### By Length
+
+```markdown
+users := client.User.Query().
+    Order(
+        sqljson.OrderLen(user.FieldData, sqljson.Path("key1", "key2")),
+    ).
+    AllX(ctx)
+```
+
+#### Descending
+
+```markdown
+users := client.User.Query().
+    Order(
+        sqljson.OrderValueDesc(user.FieldData, sqljson.Path("key1", "key2")),
+    ).
+    AllX(ctx)
+
+pets := client.Pet.Query().
+    Order(
+        sqljson.OrderLenDesc(pet.FieldData, sqljson.Path("key1", "key2")),
     ).
     AllX(ctx)
 ```

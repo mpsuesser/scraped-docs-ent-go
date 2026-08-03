@@ -2,8 +2,8 @@
 url: https://entgo.io/docs/schema-fields
 title: "Schema Fields"
 description: ""
-access_date: 2026-08-03T17:26:33.758Z
-current_date: 2026-08-03T17:26:33.758Z
+access_date: 2026-08-03T18:12:34.399Z
+current_date: 2026-08-03T18:12:34.399Z
 ---
 
 ## Quick Summary
@@ -238,15 +238,11 @@ func (Card) Fields() []ent.Field {
 
 Ent allows attaching custom `ValueScanner` for basic or custom Go types. This enables the use of standard schema fields while maintaining control over how they are stored in the database without implementing a `ValueScanner` interface. Additionally, this option enables users to use `GoType` that does not implement the `ValueScanner`, such as `*url.URL`.
 
-> [!-secondary] -secondary
-> note
+> **Note:**
 > 
 > At this stage, this option is only available for text and numeric fields, but it will be extended to other types in the future.
 
-- TextMarshaller
-- BinaryMarshaller
-- Functions based
-- Custom
+#### TextMarshaller
 
 Fields with a custom Go type that implements the `encoding.TextMarshaller` and `encoding.TextUnmarshaller` interfaces can use the `field.TextValueScanner` as a `ValueScanner`. This `ValueScanner` calls `MarshalText` and `UnmarshalText` for writing and reading field values from the database:
 
@@ -254,6 +250,80 @@ Fields with a custom Go type that implements the `encoding.TextMarshaller` and `
 field.String("big_int").
     GoType(&big.Int{}).
     ValueScanner(field.TextValueScanner[*big.Int]{})
+```
+
+#### BinaryMarshaller
+
+Fields with a custom Go type that implements the `encoding.BinaryMarshaller` and `encoding.BinaryUnmarshaller` interfaces can use the `field.BinaryValueScanner` as a `ValueScanner`. This `ValueScanner` calls `MarshalBinary` and `UnmarshalBinary` for writing and reading field values from the database:
+
+```markdown
+field.String("url").
+    GoType(&url.URL{}).
+    ValueScanner(field.BinaryValueScanner[*url.URL]{})
+```
+
+#### Functions based
+
+The `field.ValueScannerFunc` allows setting two functions to be used for writing and reading database values: `V` for `driver.Value` and `S` for `sql.Scanner`:
+
+```markdown
+field.String("encoded").
+    ValueScanner(field.ValueScannerFunc[string, *sql.NullString]{
+        V: func(s string) (driver.Value, error) {
+            return base64.StdEncoding.EncodeToString([]byte(s)), nil
+        },
+        S: func(ns *sql.NullString) (string, error) {
+            if !ns.Valid {
+                return "", nil
+            }
+            b, err := base64.StdEncoding.DecodeString(ns.String)
+            if err != nil {
+                return "", err
+            }
+            return string(b), nil
+        },
+    })
+```
+
+#### Custom
+
+```markdown
+field.String("prefixed").
+    ValueScanner(PrefixedHex{
+        prefix: "0x",
+    })
+```
+```markdown
+// PrefixedHex is a custom type that implements the TypeValueScanner interface.
+type PrefixedHex struct {
+    prefix string
+}
+
+// Value implements the TypeValueScanner.Value method.
+func (p PrefixedHex) Value(s string) (driver.Value, error) {
+    return p.prefix + ":" + hex.EncodeToString([]byte(s)), nil
+}
+
+// ScanValue implements the TypeValueScanner.ScanValue method.
+func (PrefixedHex) ScanValue() field.ValueScanner {
+    return &sql.NullString{}
+}
+
+// FromValue implements the TypeValueScanner.FromValue method.
+func (p PrefixedHex) FromValue(v driver.Value) (string, error) {
+    s, ok := v.(*sql.NullString)
+    if !ok {
+        return "", fmt.Errorf("unexpected input for FromValue: %T", v)
+    }
+    if !s.Valid {
+        return "", nil
+    }
+    d, err := hex.DecodeString(strings.TrimPrefix(s.String, p.prefix+":"))
+    if err != nil {
+        return "", err
+    }
+    return string(d), nil
+}
 ```
 
 ## Other Field
@@ -719,8 +789,7 @@ func (User) Fields() []ent.Field {
 }
 ```
 
-> [!-info] -info
-> [Using PostgreSQL Native Enum Types](migration/enum-types.md)
+> **Using PostgreSQL Native Enum Types:**
 > 
 > By default, Ent uses simple string types to represent the enum values in **PostgreSQL and SQLite**. However, in some cases, you may want to use the native enum types provided by the database. Follow the [enum migration guide](migration/enum-types.md) for more info.
 

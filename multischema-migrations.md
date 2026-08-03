@@ -2,14 +2,13 @@
 url: https://entgo.io/docs/multischema-migrations
 title: "Multischema Migrations"
 description: ""
-access_date: 2026-08-03T17:26:33.758Z
-current_date: 2026-08-03T17:26:33.758Z
+access_date: 2026-08-03T18:12:34.399Z
+current_date: 2026-08-03T18:12:34.399Z
 ---
 
 Using the [Atlas](https://atlasgo.io/) migration engine, an Ent schema can be defined and managed across multiple database schemas. This guides show how to achieve this with three simple steps:
 
-> [!-info] -info
-> [Atlas Pro Feature](https://atlasgo.io/features#pro-plan)
+> **Atlas Pro Feature:**
 > 
 > The *multi-schema migration* feature is fully implemented in the Atlas CLI and requires a login to use:
 > 
@@ -21,9 +20,37 @@ Using the [Atlas](https://atlasgo.io/) migration engine, an Ent schema can be de
 
 To install the latest release of Atlas, simply run one of the following commands in your terminal, or check out the [Atlas website](https://atlasgo.io/getting-started#installation):
 
+#### macOS + Linux
+
 ```shell
 curl -sSf https://atlasgo.sh | sh
 ```
+
+#### Homebrew
+
+```shell
+brew install ariga/tap/atlas
+```
+
+#### Docker
+
+```shell
+docker pull arigaio/atlas
+docker run --rm arigaio/atlas --help
+```
+
+If the container needs access to the host network or a local directory, use the `--net=host` flag and mount the desired directory:
+
+```shell
+docker run --rm --net=host \
+  -v $(pwd)/migrations:/migrations \
+  arigaio/atlas migrate apply
+  --url "mysql://root:pass@:3306/test"
+```
+
+#### Windows
+
+Download the [latest release](https://release.ariga.io/atlas/atlas-windows-amd64-latest.exe) and move the atlas binary to a file location on your system PATH.
 
 ## Login to Atlas
 
@@ -47,8 +74,7 @@ func (User) Annotations() []schema.Annotation {
 
 To share the same schema configuration across multiple Ent schemas, you can either use `ent.Mixin` or define and embed a *base* schema:
 
-- Mixin schema
-- Base schema
+#### Mixin schema
 
 ```markdown
 // Mixin holds the default configuration for most schemas in this package.
@@ -77,13 +103,33 @@ func (User) Mixin() []ent.Mixin {
 }
 ```
 
+#### Base schema
+
+```markdown
+// base holds the default configuration for most schemas in this package.
+type base struct {
+    ent.Schema
+}
+
+// Annotations of the base schema.
+func (base) Annotations() []schema.Annotation {
+    return []schema.Annotation{
+        entsql.Schema("db1"),
+    }
+}
+```
+```markdown
+// User holds the edge schema definition of the User entity.
+type User struct {
+    base
+}
+```
+
 ## Generate migrations
 
 To generate a migration, use the `atlas migrate diff` command. For example:
 
-- MySQL
-- MariaDB
-- PostgreSQL
+#### MySQL
 
 ```shell
 atlas migrate diff \
@@ -91,8 +137,23 @@ atlas migrate diff \
   --dev-url "docker://mysql/8"
 ```
 
-> [!-secondary] -secondary
-> note
+#### MariaDB
+
+```shell
+atlas migrate diff \
+  --to "ent://ent/schema" \
+  --dev-url "docker://maria/8"
+```
+
+#### PostgreSQL
+
+```shell
+atlas migrate diff \
+  --to "ent://ent/schema" \
+  --dev-url "docker://postgres/15/dev"
+```
+
+> **Note:**
 > 
 > The `migrate` diff command generates a list of SQL statements without indentation by default. If you would like to generate the SQL statements with indentation, use the `--format` flag. For example:
 > 

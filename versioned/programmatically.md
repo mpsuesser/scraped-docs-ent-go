@@ -2,23 +2,21 @@
 url: https://entgo.io/docs/versioned/programmatically
 title: "Programmatically"
 description: ""
-access_date: 2026-08-03T17:26:33.758Z
-current_date: 2026-08-03T17:26:33.758Z
+access_date: 2026-08-03T18:12:34.399Z
+current_date: 2026-08-03T18:12:34.399Z
 ---
 
 In the previous sections, we saw how to use the Atlas CLI to generate migration files. However, we can also generate these files programmatically. In this section we will review how to write Go code that can be used for automatically planning migration files.
 
 ## 1\. Enable the versioned migration feature flag
 
-> [!-info] -info
-> Supporting repository
+> **Supporting repository:**
 > 
 > The change described in this section can be found in PR [#2](https://github.com/rotemtam/ent-versioned-migrations-demo/pull/2/files) in the supporting repository.
 
 The first step is to enable the versioned migration feature by passing in the `sql/versioned-migration` feature flag. Depending on how you execute the Ent code generator, you have to use one of the two options:
 
-- Using Ent CLI
-- Using the entc package
+#### Using Ent CLI
 
 If you are using the default go generate configuration, simply add the `--feature sql/versioned-migration` to the `ent/generate.go` file as follows:
 
@@ -26,6 +24,32 @@ If you are using the default go generate configuration, simply add the `--featur
 package ent
 
 //go:generate go run -mod=mod entgo.io/ent/cmd/ent generate --feature sql/versioned-migration ./schema
+```
+
+#### Using the entc package
+
+If you are using the code generation package (e.g. if you are using an Ent extension like `entgql`), add the feature flag as follows:
+
+```markdown
+//go:build ignore
+
+package main
+
+import (
+    "log"
+
+    "entgo.io/ent/entc"
+    "entgo.io/ent/entc/gen"
+)
+
+func main() {
+    err := entc.Generate("./schema", &gen.Config{
+        Features: []gen.Feature{gen.FeatureVersionedMigration},
+    })
+    if err != nil {
+        log.Fatalf("running ent codegen: %v", err)
+    }
+}
 ```
 
 Next, re-run code-generation:
@@ -43,8 +67,7 @@ These methods are used to compare the state read from a database connection or a
 
 ## 2\. Automatic Migration planning script
 
-> [!-info] -info
-> Supporting repository
+> **Supporting repository:**
 > 
 > The change described in this section can be found in PR [#4](https://github.com/rotemtam/ent-versioned-migrations-demo/pull/4/files) in the supporting repository.
 
@@ -108,8 +131,7 @@ func main() {
 }
 ```
 
-> [!-info] -info
-> info
+> **Info:**
 > 
 > Notice that you need to make some modifications to the script above in the highlighted lines. Edit the import path of the `migrate` package to match your project and to supply the connection string to your Dev database.
 

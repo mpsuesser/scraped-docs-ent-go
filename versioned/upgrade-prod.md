@@ -2,12 +2,11 @@
 url: https://entgo.io/docs/versioned/upgrade-prod
 title: "Upgrade Prod"
 description: ""
-access_date: 2026-08-03T17:26:33.758Z
-current_date: 2026-08-03T17:26:33.758Z
+access_date: 2026-08-03T18:12:34.399Z
+current_date: 2026-08-03T18:12:34.399Z
 ---
 
-> [!-info] -info
-> Supporting repository
+> **Supporting repository:**
 > 
 > The change described in this section can be found in [PR #5](https://github.com/rotemtam/ent-versioned-migrations-demo/pull/5/files) in the supporting repository.
 

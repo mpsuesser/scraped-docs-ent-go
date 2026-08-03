@@ -2,8 +2,8 @@
 url: https://entgo.io/docs/feature-flags
 title: "Feature Flags"
 description: ""
-access_date: 2026-08-03T17:26:33.758Z
-current_date: 2026-08-03T17:26:33.758Z
+access_date: 2026-08-03T18:12:34.399Z
+current_date: 2026-08-03T18:12:34.399Z
 ---
 
 The framework provides a collection of code-generation features that be added or removed using flags.
@@ -83,8 +83,7 @@ The `bidiedges` option guides Ent to set two-way references when eager-loading (
 
 This option can be added to a project using the `--feature bidiedges` flag.
 
-> [!-secondary] -secondary
-> note
+> **Note:**
 > 
 > Users that use the standard encoding/json.MarshalJSON should detach the circular references before calling `json.Marshal`.
 
@@ -363,8 +362,7 @@ if _, err := tx.ExecContext("SAVEPOINT user_created"); err != nil {
 // ...
 ```
 
-> [!-danger] -danger
-> Note
+> **Note:**
 > 
 > Statements executed using `ExecContext` / `QueryContext` do not go through Ent, and may skip fundamental layers in your application such as hooks, privacy (authorization), and validators.
 
@@ -414,8 +412,7 @@ This does not work well if you work with [GraphQL](https://graphql.org/learn/sch
 
 To enable the Universal-IDs support for your project, simply use the `--feature sql/globalid` flag.
 
-> [!-danger] -danger
-> Note
+> **Note:**
 > 
 > If you have used the `migrate.WithGlobalUniqueID(true)` migration option in the past, please read [this guide](globalid-migrate.md) before you switch your project to use the new globalid feature.
 

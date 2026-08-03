@@ -2,8 +2,8 @@
 url: https://entgo.io/docs/schema-edges
 title: "Schema Edges"
 description: ""
-access_date: 2026-08-03T17:26:33.758Z
-current_date: 2026-08-03T17:26:33.758Z
+access_date: 2026-08-03T18:12:34.399Z
+current_date: 2026-08-03T18:12:34.399Z
 ---
 
 ## Quick Summary
@@ -13,6 +13,8 @@ Edges are the relations (or associations) of entities. For example, user's pets,
 In the example above, you can see 2 relations declared using edges. Let's go over them.
 
 1\. `pets` / `owner` edges; user's pets and pet's owner:
+
+#### User
 
 ```markdown
 package schema
@@ -42,6 +44,38 @@ func (User) Edges() []ent.Edge {
 }
 ```
 
+#### Pet
+
+```markdown
+package schema
+
+import (
+    "entgo.io/ent"
+    "entgo.io/ent/schema/edge"
+)
+
+// Pet holds the schema definition for the Pet entity.
+type Pet struct {
+    ent.Schema
+}
+
+// Fields of the Pet.
+func (Pet) Fields() []ent.Field {
+    return []ent.Field{
+        // ...
+    }
+}
+
+// Edges of the Pet.
+func (Pet) Edges() []ent.Edge {
+    return []ent.Edge{
+        edge.From("owner", User.Type).
+            Ref("pets").
+            Unique(),
+    }
+}
+```
+
 As you can see, a `User` entity can **have many** pets, but a `Pet` entity can **have only one** owner.  
 In relationship definition, the `pets` edge is a *O2M* (one-to-many) relationship, and the `owner` edge is a *M2O* (many-to-one) relationship.
 
@@ -53,8 +87,7 @@ The cardinality of the edge/relationship can be controlled using the `Unique` me
 
 2\. `users` / `groups` edges; group's users and user's groups:
 
-- Group
-- User
+#### Group
 
 ```markdown
 package schema
@@ -84,6 +117,39 @@ func (Group) Edges() []ent.Edge {
 }
 ```
 
+#### User
+
+```markdown
+package schema
+
+import (
+    "entgo.io/ent"
+    "entgo.io/ent/schema/edge"
+)
+
+// User schema.
+type User struct {
+    ent.Schema
+}
+
+// Fields of the user.
+func (User) Fields() []ent.Field {
+    return []ent.Field{
+        // ...
+    }
+}
+
+// Edges of the user.
+func (User) Edges() []ent.Edge {
+    return []ent.Edge{
+        edge.From("groups", Group.Type).
+            Ref("users"),
+        // "pets" declared in the example above.
+        edge.To("pets", Pet.Type),
+    }
+}
+```
+
 As you can see, a Group entity can **have many** users, and a User entity can have **have many** groups.  
 In relationship definition, the `users` edge is a *M2M* (many-to-many) relationship, and the `groups` edge is also a *M2M* (many-to-many) relationship.
 
@@ -103,8 +169,7 @@ In this example, a user **has only one** credit-card, and a card **has only one*
 
 The `User` schema defines an `edge.To` card named `card`, and the `Card` schema defines a back-reference to this edge using `edge.From` named `owner`.
 
-- User
-- Card
+#### User
 
 ```markdown
 // Edges of the user.
@@ -112,6 +177,23 @@ func (User) Edges() []ent.Edge {
     return []ent.Edge{
         edge.To("card", Card.Type).
             Unique(),
+    }
+}
+```
+
+#### Card
+
+```markdown
+// Edges of the Card.
+func (Card) Edges() []ent.Edge {
+    return []ent.Edge{
+        edge.From("owner", User.Type).
+            Ref("card").
+            Unique().
+            // We add the "Required" method to the builder
+            // to make this edge required on entity creation.
+            // i.e. Card cannot be created without its owner.
+            Required(),
     }
 }
 ```
@@ -347,11 +429,26 @@ In this user-pets example, we have a O2M relation between user and its pets. Eac
 
 Note that this relation is also a M2O (many-to-one) from the point of view of the `Pet` schema.
 
+#### User
+
 ```markdown
 // Edges of the User.
 func (User) Edges() []ent.Edge {
     return []ent.Edge{
         edge.To("pets", Pet.Type),
+    }
+}
+```
+
+#### Pet
+
+```markdown
+// Edges of the Pet.
+func (Pet) Edges() []ent.Edge {
+    return []ent.Edge{
+        edge.From("owner", User.Type).
+            Ref("pets").
+            Unique(),
     }
 }
 ```
@@ -637,8 +734,7 @@ func Do(ctx context.Context, client *ent.Client) error {
 }
 ```
 
-> [!-secondary] -secondary
-> note
+> **Note:**
 > 
 > Calling `AddGroups` (a M2M edge) will result in a no-op in case the edge already exists and is not an [EdgeSchema](#edge-schema):
 > 
@@ -740,8 +836,7 @@ func Do(ctx context.Context, client *ent.Client) error {
 }
 ```
 
-> [!-secondary] -secondary
-> note
+> **Note:**
 > 
 > Calling `AddFollowers` (a M2M edge) will result in a no-op in case the edge already exists and is not an [EdgeSchema](#edge-schema):
 > 
@@ -814,8 +909,7 @@ func Do(ctx context.Context, client *ent.Client) error {
 }
 ```
 
-> [!-secondary] -secondary
-> note
+> **Note:**
 > 
 > Calling `AddFriends` (a M2M bidirectional edge) will result in a no-op in case the edge already exists and is not an [EdgeSchema](#edge-schema):
 > 
@@ -919,8 +1013,7 @@ Edge schemas are intermediate entity schemas for M2M edges. By using the `Throug
 
 In the following example, we demonstrate how to model the friendship between two users using an edge schema with the two required fields of the relationship (`user_id` and `friend_id`), and an additional field named `created_at` whose value is automatically set on creation.
 
-- User
-- Friendship
+#### User
 
 ```markdown
 // User holds the schema definition for the User entity.
@@ -945,8 +1038,40 @@ func (User) Edges() []ent.Edge {
 }
 ```
 
-> [!-info] -info
-> info
+#### Friendship
+
+```markdown
+// Friendship holds the edge schema definition of the Friendship relationship.
+type Friendship struct {
+    ent.Schema
+}
+
+// Fields of the Friendship.
+func (Friendship) Fields() []ent.Field {
+    return []ent.Field{
+        field.Time("created_at").
+            Default(time.Now),
+        field.Int("user_id"),
+        field.Int("friend_id"),
+    }
+}
+
+// Edges of the Friendship.
+func (Friendship) Edges() []ent.Edge {
+    return []ent.Edge{
+        edge.To("user", User.Type).
+            Required().
+            Unique().
+            Field("user_id"),
+        edge.To("friend", User.Type).
+            Required().
+            Unique().
+            Field("friend_id"),
+    }
+}
+```
+
+> **Info:**
 > 
 > - Similar to entity schemas, the `ID` field is automatically generated for edge schemas if not stated otherwise.
 > - Edge schemas cannot be used by more than one relationship.
@@ -956,9 +1081,7 @@ func (User) Edges() []ent.Edge {
 
 In the following example, we demonstrate how to model a system where users can "like" tweets, and a timestamp of when the tweet was "liked" is stored in the database. This is a way to store additional fields on the edge.
 
-- User
-- Tweet
-- Like
+#### User
 
 ```markdown
 // User holds the schema definition for the User entity.
@@ -983,8 +1106,71 @@ func (User) Edges() []ent.Edge {
 }
 ```
 
-> [!-info] -info
-> info
+#### Tweet
+
+```markdown
+// Tweet holds the schema definition for the Tweet entity.
+type Tweet struct {
+    ent.Schema
+}
+
+// Fields of the Tweet.
+func (Tweet) Fields() []ent.Field {
+    return []ent.Field{
+        field.Text("text"),
+    }
+}
+
+// Edges of the Tweet.
+func (Tweet) Edges() []ent.Edge {
+    return []ent.Edge{
+        edge.From("liked_users", User.Type).
+            Ref("liked_tweets").
+            Through("likes", Like.Type),
+    }
+}
+```
+
+#### Like
+
+```markdown
+// Like holds the edge schema definition for the Like edge.
+type Like struct {
+    ent.Schema
+}
+
+func (Like) Annotations() []schema.Annotation {
+    return []schema.Annotation{
+        field.ID("user_id", "tweet_id"),
+    }
+}
+
+// Fields of the Like.
+func (Like) Fields() []ent.Field {
+    return []ent.Field{
+        field.Time("liked_at").
+            Default(time.Now),
+        field.Int("user_id"),
+        field.Int("tweet_id"),
+    }
+}
+
+// Edges of the Like.
+func (Like) Edges() []ent.Edge {
+    return []ent.Edge{
+        edge.To("user", User.Type).
+            Unique().
+            Required().
+            Field("user_id"),
+        edge.To("tweet", Tweet.Type).
+            Unique().
+            Required().
+            Field("tweet_id"),
+    }
+}
+```
+
+> **Info:**
 > 
 > In the example above, the `field.ID` annotation is used to tell Ent that the edge schema identifier is a composite primary-key of the two edge-fields, `user_id` and `tweet_id`. Therefore, the `ID` field will not be generated for the `Like` struct along with any of its builder methods. e.g. `Get`, `OnlyID`, etc.
 
@@ -994,9 +1180,7 @@ In some cases, users want to store O2M/M2O or O2O relationships in a separate ta
 
 In the following example, we present a model where users can "author" tweets with the constraint that a tweet can be written by only one user. Unlike regular O2M/M2O edges, by using an edge schema, we enforce this constraint on the join table using a unique index on the `tweet_id` column. This constraint may be dropped in the future to allow multiple users to participate in the "authoring" of a tweet. Hence, changing the edge type to M2M without migrating the data to a new table.
 
-- User
-- Tweet
-- UserTweet
+#### User
 
 ```markdown
 // User holds the schema definition for the User entity.
@@ -1021,6 +1205,73 @@ func (User) Edges() []ent.Edge {
 }
 ```
 
+#### Tweet
+
+```markdown
+// Tweet holds the schema definition for the Tweet entity.
+type Tweet struct {
+    ent.Schema
+}
+
+// Fields of the Tweet.
+func (Tweet) Fields() []ent.Field {
+    return []ent.Field{
+        field.Text("text"),
+    }
+}
+
+// Edges of the Tweet.
+func (Tweet) Edges() []ent.Edge {
+    return []ent.Edge{
+        edge.From("user", User.Type).
+            Ref("tweets").
+            Through("tweet_user", UserTweet.Type).
+            Comment("The uniqueness of the author is enforced on the edge schema"),
+    }
+}
+```
+
+#### UserTweet
+
+```markdown
+// UserTweet holds the schema definition for the UserTweet entity.
+type UserTweet struct {
+    ent.Schema
+}
+
+// Fields of the UserTweet.
+func (UserTweet) Fields() []ent.Field {
+    return []ent.Field{
+        field.Time("created_at").
+            Default(time.Now),
+        field.Int("user_id"),
+        field.Int("tweet_id"),
+    }
+}
+
+// Edges of the UserTweet.
+func (UserTweet) Edges() []ent.Edge {
+    return []ent.Edge{
+        edge.To("user", User.Type).
+            Unique().
+            Required().
+            Field("user_id"),
+        edge.To("tweet", Tweet.Type).
+            Unique().
+            Required().
+            Field("tweet_id"),
+    }
+}
+
+// Indexes of the UserTweet.
+func (UserTweet) Indexes() []ent.Index {
+    return []ent.Index{
+        index.Fields("tweet_id").
+            Unique(),
+    }
+}
+```
+
 ## Required
 
 Edges can be defined as required in the entity creation using the `Required` method on the builder.
@@ -1039,8 +1290,7 @@ func (Card) Edges() []ent.Edge {
 
 If the example above, a card entity cannot be created without its owner.
 
-> [!-info] -info
-> info
+> **Info:**
 > 
 > Note that, starting with [v0.10](https://github.com/ent/ent/releases/tag/v0.10.0), foreign key columns are created as `NOT NULL` in the database for required edges that are not [self-reference](#o2m-same-type). In order to migrate existing foreign key columns, use the [Atlas Migration](migrate.md#atlas-integration) option.
 

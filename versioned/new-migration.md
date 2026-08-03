@@ -2,12 +2,11 @@
 url: https://entgo.io/docs/versioned/new-migration
 title: "New Migration"
 description: ""
-access_date: 2026-08-03T17:26:33.758Z
-current_date: 2026-08-03T17:26:33.758Z
+access_date: 2026-08-03T18:12:34.399Z
+current_date: 2026-08-03T18:12:34.399Z
 ---
 
-> [!-info] -info
-> Supporting repository
+> **Supporting repository:**
 > 
 > The change described in this section can be found in [PR #6](https://github.com/rotemtam/ent-versioned-migrations-demo/pull/6/files) in the supporting repository.
 
@@ -34,16 +33,40 @@ go generate ./...
 
 Next, we need to create a new migration file for our change using the Atlas CLI:
 
-- MySQL
-- MariaDB
-- PostgreSQL
-- SQLite
+#### MySQL
 
 ```shell
 atlas migrate diff add_user_title \
   --dir "file://ent/migrate/migrations" \
   --to "ent://ent/schema" \
   --dev-url "docker://mysql/8/ent"
+```
+
+#### MariaDB
+
+```shell
+atlas migrate diff add_user_title \
+  --dir "file://ent/migrate/migrations" \
+  --to "ent://ent/schema" \
+  --dev-url "docker://mariadb/latest/test"
+```
+
+#### PostgreSQL
+
+```shell
+atlas migrate diff add_user_title \
+  --dir "file://ent/migrate/migrations" \
+  --to "ent://ent/schema" \
+  --dev-url "docker://postgres/15/test?search_path=public"
+```
+
+#### SQLite
+
+```shell
+atlas migrate diff add_user_title \
+  --dir "file://ent/migrate/migrations" \
+  --to "ent://ent/schema" \
+  --dev-url "sqlite://file?mode=memory&_fk=1"
 ```
 
 Observe a new file named `20221115101649_add_user_title.sql` was created under the `ent/migrate/migrations/` directory. This file contains the SQL statements to create the newly added `title` field in the `users` table:

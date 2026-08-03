@@ -2,8 +2,8 @@
 url: https://entgo.io/docs/data-migrations
 title: "Data Migrations"
 description: ""
-access_date: 2026-08-03T17:26:33.758Z
-current_date: 2026-08-03T17:26:33.758Z
+access_date: 2026-08-03T18:12:34.399Z
+current_date: 2026-08-03T18:12:34.399Z
 ---
 
 Migrations are usually used for changing the database schema, but in some cases, there is a need to modify the data stored in the database. For example, adding seed data, or back-filling empty columns with custom default values.
@@ -57,9 +57,7 @@ Currently, Ent provides initial support for generating data migration files. By 
 
 2\. Create your first data-migration function. Below, you will find some examples that demonstrate how to write such a function:
 
-- Single Statement
-- Multi Statement
-- Data Seeding
+#### Single Statement
 
 ```markdown
 package migratedata
@@ -94,6 +92,106 @@ Then, using this function in `ent/migrate/main.go` will generate the following m
 ```sql
 -- Backfill all empty user names with default value 'unknown'.
 UPDATE \`users\` SET \`name\` = 'Unknown' WHERE \`users\`.\`name\` = '';
+```
+
+#### Multi Statement
+
+```markdown
+package migratedata
+
+// BackfillUserTags is used to generate the migration file '20221126185750_backfill_user_tags.sql'.
+func BackfillUserTags(dir *migrate.LocalDir) error {
+    w := &schema.DirWriter{Dir: dir}
+    client := ent.NewClient(ent.Driver(schema.NewWriteDriver(dialect.MySQL, w)))
+
+    // Add defaults "foo" and "bar" tags for users without any.
+    err := client.User.
+        Update().
+        Where(func(s *sql.Selector) {
+            s.Where(
+                sql.Or(
+                    sql.IsNull(user.FieldTags),
+                    sqljson.ValueIsNull(user.FieldTags),
+                ),
+            )
+        }).
+        SetTags([]string{"foo", "bar"}).
+        Exec(context.Background())
+    if err != nil {
+        return fmt.Errorf("failed generating backfill statement: %w", err)
+    }
+    // Document all changes until now with a custom comment.
+    w.Change("Backfill NULL or null tags with a default value.")
+
+    // Append the "org" special tag for users with a specific prefix or suffix.
+    err = client.User.
+        Update().
+        Where(
+            user.Or(
+                user.NameHasPrefix("org-"),
+                user.NameHasSuffix("-org"),
+            ),
+            // Append to only those without this tag.
+            func(s *sql.Selector) {
+                s.Where(
+                    sql.Not(sqljson.ValueContains(user.FieldTags, "org")),
+                )
+            },
+        ).
+        AppendTags([]string{"org"}).
+        Exec(context.Background())
+    if err != nil {
+        return fmt.Errorf("failed generating backfill statement: %w", err)
+    }
+    // Document all changes until now with a custom comment.
+    w.Change("Append the 'org' tag for organization accounts in case they don't have it.")
+
+    // Write the content to the migration directory.
+    return w.Flush("backfill_user_tags")
+}
+```
+
+Then, using this function in `ent/migrate/main.go` will generate the following migration file:
+
+```sql
+-- Backfill NULL or null tags with a default value.
+UPDATE \`users\` SET \`tags\` = '["foo","bar"]' WHERE \`tags\` IS NULL OR JSON_CONTAINS(\`tags\`, 'null', '$');
+-- Append the 'org' tag for organization accounts in case they don't have it.
+UPDATE \`users\` SET \`tags\` = CASE WHEN (JSON_TYPE(JSON_EXTRACT(\`tags\`, '$')) IS NULL OR JSON_TYPE(JSON_EXTRACT(\`tags\`, '$')) = 'NULL') THEN JSON_ARRAY('org') ELSE JSON_ARRAY_APPEND(\`tags\`, '$', 'org') END WHERE (\`users\`.\`name\` LIKE 'org-%' OR \`users\`.\`name\` LIKE '%-org') AND (NOT (JSON_CONTAINS(\`tags\`, '"org"', '$') = 1));
+```
+
+#### Data Seeding
+
+```markdown
+package migratedata
+
+// SeedUsers add the initial users to the database.
+func SeedUsers(dir *migrate.LocalDir) error {
+    w := &schema.DirWriter{Dir: dir}
+    client := ent.NewClient(ent.Driver(schema.NewWriteDriver(dialect.MySQL, w)))
+
+    // The statement that generates the INSERT statement.
+    err := client.User.CreateBulk(
+        client.User.Create().SetName("a8m").SetAge(1).SetTags([]string{"foo"}),
+        client.User.Create().SetName("nati").SetAge(1).SetTags([]string{"bar"}),
+    ).Exec(context.Background())
+    if err != nil {
+        return fmt.Errorf("failed generating statement: %w", err)
+    }
+
+    // Write the content to the migration directory.
+    return w.FlushChange(
+        "seed_users",
+        "Add the initial users to the database.",
+    )
+}
+```
+
+Then, using this function in `ent/migrate/main.go` will generate the following migration file:
+
+```sql
+-- Add the initial users to the database.
+INSERT INTO \`users\` (\`age\`, \`name\`, \`tags\`) VALUES (1, 'a8m', '["foo"]'), (1, 'nati', '["bar"]');
 ```
 
 3\. In case the generated file was edited, the migration directory [integrity file](https://atlasgo.io/concepts/migration-directory-integrity) needs to be updated with the following command:

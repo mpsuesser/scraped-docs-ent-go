@@ -2,8 +2,8 @@
 url: https://entgo.io/docs/migrate
 title: "Migrate"
 description: ""
-access_date: 2026-08-03T17:26:33.758Z
-current_date: 2026-08-03T17:26:33.758Z
+access_date: 2026-08-03T18:12:34.399Z
+current_date: 2026-08-03T18:12:34.399Z
 ---
 
 The migration support for `ent` provides the option for keeping the database schema aligned with the schema objects defined in `ent/migrate/schema.go` under the root of your project.

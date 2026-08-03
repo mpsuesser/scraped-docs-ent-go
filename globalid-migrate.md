@@ -2,16 +2,15 @@
 url: https://entgo.io/docs/globalid-migrate
 title: "Globalid Migrate"
 description: ""
-access_date: 2026-08-03T17:26:33.758Z
-current_date: 2026-08-03T17:26:33.758Z
+access_date: 2026-08-03T18:12:34.399Z
+current_date: 2026-08-03T18:12:34.399Z
 ---
 
 Prior to the baked-in global id feature flag, the migration tool had a `WithGlobalUniqueID` option that allowed users to migrate their schema to use globally unique ids. This option is now deprecated and users should use the global id feature flag instead. Existing users can migrate their schema to use globally unique ids by following the steps below.
 
 The previous solution utilized a table called `ent_types` to store mapping information between an Ent schema, and it's associated id range. The new solution uses a static configuration file to store this mapping. In order to migrate to the new globalid feature, one can use the `entfix` command to migrate an existing `ent_types` table to the new configuration file.
 
-> [!-danger] -danger
-> Attention
+> **Attention:**
 > 
 > Please note, that the 'ent\_types' table might differ between different environments where your app is deployed. This is especially true if you are using auto-migration instead of versioned migrations. Please check, that all 'ent\_types' tables for all deployments are equal. If they aren't you cannot convert to the new global id feature.
 
@@ -50,8 +49,7 @@ Finish the migration by running once again the code generation once. You should 
 
 It might be desired to keep the `ent_types` in the database and not drop it until you are sure you do not need to rollback compute. You can do this by using an Atlas composite schema:
 
-- schema.my.sql
-- atlas-hcl
+#### schema.my.sql
 
 ```markdown
 schema "ent" {}
@@ -79,6 +77,29 @@ table "ent_types" {
 }
 ```
 
+#### atlas-hcl
+
+```markdown
+data "composite_schema" "ent" {
+  schema "ent" {
+    url = "ent://./ent/schema?globalid=static"
+  }
+  # This exists to not delete the ent_types table yet.
+  schema "ent" {
+    url = "file://./schema.my.hcl"
+  }
+}
+
+env {
+  name = atlas.env
+  src = data.composite_schema.ent.url
+  dev = "docker://mysql/8/ent"
+  migration {
+    dir = "file://./ent/migrate/migrations"
+  }
+}
+```
+
 ## Universal IDs (deprecated migration option)
 
 By default, SQL primary-keys start from 1 for each table; which means that multiple entities of different types can share the same ID. Unlike AWS Neptune, where node IDs are UUIDs.
@@ -87,8 +108,7 @@ This does not work well if you work with [GraphQL](https://graphql.org/learn/sch
 
 To enable the Universal-IDs support for your project, pass the `WithGlobalUniqueID` option to the migration.
 
-> [!-secondary] -secondary
-> note
+> **Note:**
 > 
 > Versioned-migration users should follow [the documentation](versioned-migrations.md#a-word-on-global-unique-ids) when using `WithGlobalUniqueID` on MySQL 5.\*.
 

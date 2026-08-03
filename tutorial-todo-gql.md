@@ -2,8 +2,8 @@
 url: https://entgo.io/docs/tutorial-todo-gql
 title: "Tutorial Todo Gql"
 description: ""
-access_date: 2026-08-03T17:26:33.758Z
-current_date: 2026-08-03T17:26:33.758Z
+access_date: 2026-08-03T18:12:34.399Z
+current_date: 2026-08-03T18:12:34.399Z
 ---
 
 In this tutorial, we will learn how to connect Ent to [GraphQL](https://graphql.org/) and set up the various integrations Ent provides, such as:
@@ -83,8 +83,7 @@ func main() {
 }
 ```
 
-> [!-secondary] -secondary
-> note
+> **Note:**
 > 
 > The `ent/entc.go` is ignored using a build tag, and it is executed by the `go generate` command through the `generate.go` file.
 
@@ -328,14 +327,23 @@ func (r *queryResolver) Todos(ctx context.Context) ([]*ent.Todo, error) {
 
 Then, running this GraphQL query should return an empty todo list:
 
-- GraphQL
-- Output
+#### GraphQL
 
 ```graphql
 query AllTodos {
     todos {
         id
     }
+}
+```
+
+#### Output
+
+```json
+{
+  "data": {
+    "todos": []
+  }
 }
 ```
 
@@ -382,6 +390,8 @@ func (r *mutationResolver) CreateTodo(ctx context.Context, input ent.CreateTodoI
 
 At this stage, we are ready to create a todo item and query it:
 
+#### Mutation
+
 ```graphql
 mutation CreateTodo {
     createTodo(input: {text: "Create GraphQL Example", status: IN_PROGRESS, priority: 1}) {
@@ -390,6 +400,49 @@ mutation CreateTodo {
         createdAt
         priority
     }
+}
+```
+
+#### Mutation Output
+
+```json
+{
+  "data": {
+    "createTodo": {
+      "id": "1",
+      "text": "Create GraphQL Example",
+      "createdAt": "2022-09-08T15:20:58.696576+03:00",
+      "priority": 1,
+    }
+  }
+}
+```
+
+#### Query
+
+```graphql
+query {
+  todos {
+    id
+    text
+    status
+  }
+}
+```
+
+#### Query Output
+
+```json
+{
+  "data": {
+    "todos": [
+      {
+        "id": "1",
+        "text": "Create GraphQL Example",
+        "status": "IN_PROGRESS"
+      }
+    ]
+  }
 }
 ```
 

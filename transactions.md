@@ -2,8 +2,8 @@
 url: https://entgo.io/docs/transactions
 title: "Transactions"
 description: ""
-access_date: 2026-08-03T17:26:33.758Z
-current_date: 2026-08-03T17:26:33.758Z
+access_date: 2026-08-03T18:12:34.399Z
+current_date: 2026-08-03T18:12:34.399Z
 ---
 
 ## Starting A Transaction
@@ -63,8 +63,7 @@ func rollback(tx *ent.Tx, err error) error {
 
 You must call `Unwrap()` if you are querying edges off of a created entity after a successful transaction (example: `a8m.QueryGroups()`). Unwrap restores the state of the underlying client embedded within the entity to a non-transactable version.
 
-> [!-danger] -danger
-> Note
+> **Note:**
 > 
 > Calling `Unwrap()` on a non-transactional entity (i.e., after a transaction has been committed or rolled back) will cause a panic.
 

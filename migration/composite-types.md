@@ -2,16 +2,15 @@
 url: https://entgo.io/docs/migration/composite-types
 title: "Composite Types"
 description: ""
-access_date: 2026-08-03T17:26:33.758Z
-current_date: 2026-08-03T17:26:33.758Z
+access_date: 2026-08-03T18:12:34.399Z
+current_date: 2026-08-03T18:12:34.399Z
 ---
 
 In PostgreSQL, a composite type is structured like a row or record, consisting of field names and their corresponding data types. Setting an Ent field as a composite type enables you to store complex and structured data in a single column.
 
 This guide explains how to define a schema field type as a composite type in your Ent schema and configure the schema migration to manage both the composite types and the Ent schema as a single migration unit using Atlas.
 
-> [!-info] -info
-> [Atlas Pro Feature](https://atlasgo.io/features#pro-plan)
+> **Atlas Pro Feature:**
 > 
 > Atlas support for [Composite Types](https://atlasgo.io/atlas-schema/hcl#composite-type) is available exclusively to Pro users. To use this feature, run:
 > 
@@ -23,14 +22,37 @@ This guide explains how to define a schema field type as a composite type in you
 
 To install the latest release of Atlas, simply run one of the following commands in your terminal, or check out the [Atlas website](https://atlasgo.io/getting-started#installation):
 
-- macOS + Linux
-- Homebrew
-- Docker
-- Windows
+#### macOS + Linux
 
 ```shell
 curl -sSf https://atlasgo.sh | sh
 ```
+
+#### Homebrew
+
+```shell
+brew install ariga/tap/atlas
+```
+
+#### Docker
+
+```shell
+docker pull arigaio/atlas
+docker run --rm arigaio/atlas --help
+```
+
+If the container needs access to the host network or a local directory, use the `--net=host` flag and mount the desired directory:
+
+```shell
+docker run --rm --net=host \
+  -v $(pwd)/migrations:/migrations \
+  arigaio/atlas migrate apply
+  --url "mysql://root:pass@:3306/test"
+```
+
+#### Windows
+
+Download the [latest release](https://release.ariga.io/atlas/atlas-windows-amd64-latest.exe) and move the atlas binary to a file location on your system PATH.
 
 ## Login to Atlas
 
@@ -47,8 +69,7 @@ In order to extend our PostgreSQL schema to include both custom composite types 
 
 1\. Create a `schema.sql` that defines the necessary composite type. In the same way, you can configure the composite type in [Atlas Schema HCL language](https://atlasgo.io/atlas-schema/hcl-types#composite-type):
 
-- Using SQL
-- Using HCL
+#### Using SQL
 
 ```sql
 CREATE TYPE address AS (
@@ -57,10 +78,25 @@ CREATE TYPE address AS (
 );
 ```
 
+#### Using HCL
+
+```markdown
+schema "public" {}
+
+composite "address" {
+  schema = schema.public
+  field "street" {
+    type = text
+  }
+  field "city" {
+    type = text
+  }
+}
+```
+
 2\. In your Ent schema, define a field that uses the composite type only in PostgreSQL dialect:
 
-- Schema
-- Address Type
+#### Schema
 
 ```markdown
 // Fields of the User.
@@ -75,10 +111,36 @@ func (User) Fields() []ent.Field {
 }
 ```
 
-> [!-secondary] -secondary
-> note
+> **Note:**
 > 
 > In case a schema with custom driver-specific types is used with other databases, Ent falls back to the default type used by the driver (e.g., "varchar").
+
+#### Address Type
+
+```markdown
+type Address struct {
+    Street, City string
+}
+
+var _ field.ValueScanner = (*Address)(nil)
+
+// Scan implements the database/sql.Scanner interface.
+func (a *Address) Scan(v interface{}) (err error) {
+    switch v := v.(type) {
+    case nil:
+    case string:
+        _, err = fmt.Sscanf(v, "(%q,%q)", &a.Street, &a.City)
+    case []byte:
+        _, err = fmt.Sscanf(string(v), "(%q,%q)", &a.Street, &a.City)
+    }
+    return
+}
+
+// Value implements the driver.Valuer interface.
+func (a *Address) Value() (driver.Value, error) {
+    return fmt.Sprintf("(%q,%q)", a.Street, a.City), nil
+}
+```
 
 3\. Create a simple `atlas.hcl` config file with a `composite_schema` that includes both your custom types defined in `schema.sql` and your Ent schema:
 
@@ -152,8 +214,7 @@ atlas migrate apply \
   --url "postgres://postgres:pass@localhost:5432/database?search_path=public&sslmode=disable"
 ```
 
-> [!-info] -info
-> Apply the Schema Directly on the Database
+> **Apply the Schema Directly on the Database:**
 > 
 > Sometimes, there is a need to apply the schema directly to the database without generating a migration file. For example, when experimenting with schema changes, spinning up a database for testing, etc. In such cases, you can use the command below to apply the schema directly to the database:
 > 

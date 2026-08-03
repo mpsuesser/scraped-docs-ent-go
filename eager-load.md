@@ -2,8 +2,8 @@
 url: https://entgo.io/docs/eager-load
 title: "Eager Load"
 description: ""
-access_date: 2026-08-03T17:26:33.758Z
-current_date: 2026-08-03T17:26:33.758Z
+access_date: 2026-08-03T18:12:34.399Z
+current_date: 2026-08-03T18:12:34.399Z
 ---
 
 ## Overview
@@ -114,8 +114,7 @@ Note that only SQL dialects support this feature.
 
 In some cases there is a need for preloading edges with custom names. For example, a GraphQL query that has two aliases referencing the same edge with different arguments. For this situation, Ent provides another API named `WithNamed<E>` that can be enabled using the [`namedges`](feature-flags.md#named-edges) feature-flag and seamlessly integrated with [EntGQL Fields Collection](tutorial-todo-gql-field-collection.md).
 
-- Ent
-- GraphQL
+#### Ent
 
 See the GraphQL tab to learn more about the motivation behind this API.
 
@@ -139,6 +138,33 @@ for _, p := range posts {
     if err != nil {
         return err
     }
+}
+```
+
+#### GraphQL
+
+An example of a GraphQL query that has two aliases referencing the same edge with different arguments.
+
+```graphql
+query {
+  posts {
+    id
+    title
+    published: comments(where: { status: PUBLISHED }) {
+      edges {
+        node {
+          text
+        }
+      }
+    }
+    draft: comments(where: { status: DRAFT }) {
+      edges {
+        node {
+          text
+        }
+      }
+    }
+  }
 }
 ```
 

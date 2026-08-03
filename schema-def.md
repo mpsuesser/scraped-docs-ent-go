@@ -2,8 +2,8 @@
 url: https://entgo.io/docs/schema-def
 title: "Schema Def"
 description: ""
-access_date: 2026-08-03T17:26:33.758Z
-current_date: 2026-08-03T17:26:33.758Z
+access_date: 2026-08-03T18:12:34.399Z
+current_date: 2026-08-03T18:12:34.399Z
 ---
 
 ## Quick Summary
@@ -60,8 +60,7 @@ Entity schemas are usually stored inside `ent/schema` directory under the root d
 go run -mod=mod entgo.io/ent/cmd/ent new User Group
 ```
 
-> [!-secondary] -secondary
-> note
+> **Note:**
 > 
 > Please note, that some schema names (like `Client`) are not available due to [internal use](https://pkg.go.dev/entgo.io/ent/entc/gen#ValidSchemaName). You can circumvent reserved names by using an annotation as mentioned [here](schema-annotations.md#custom-table-name).
 

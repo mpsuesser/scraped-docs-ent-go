@@ -2,11 +2,13 @@
 url: https://entgo.io/docs/schema-views
 title: "Schema Views"
 description: ""
-access_date: 2026-08-03T17:26:33.758Z
-current_date: 2026-08-03T17:26:33.758Z
+access_date: 2026-08-03T18:12:34.399Z
+current_date: 2026-08-03T18:12:34.399Z
 ---
 
 Ent supports working with database views. Unlike regular Ent types (schemas), which are usually backed by tables, views act as "virtual tables" and their data results from a query. The following examples demonstrate how to define a `VIEW` in Ent. For more details on the different options, follow the rest of the guide.
+
+#### Builder Definition
 
 ```markdown
 // CleanUser represents a user without its PII field.
@@ -32,8 +34,54 @@ func (CleanUser) Fields() []ent.Field {
 }
 ```
 
-> [!-info] -info
-> key differences between tables and views
+#### Raw Definition
+
+```markdown
+// CleanUser represents a user without its PII field.
+type CleanUser struct {
+    ent.View
+}
+
+// Annotations of the CleanUser.
+func (CleanUser) Annotations() []schema.Annotation {
+    return []schema.Annotation{
+        // Alternatively, you can use raw definitions to define the view.
+        // But note, this definition is skipped if the ViewFor annotation
+        // is defined for the dialect we generated migration to (Postgres).
+        entsql.View(\`SELECT name, public_info FROM users\`),
+    }
+}
+
+// Fields of the CleanUser.
+func (CleanUser) Fields() []ent.Field {
+    return []ent.Field{
+        field.String("name"),
+        field.String("public_info"),
+    }
+}
+```
+
+#### External Definition
+
+```markdown
+// CleanUser represents a user without its PII field.
+type CleanUser struct {
+    ent.View
+}
+
+// View definition is specified in a separate file (\`schema.sql\`),
+// and loaded using Atlas' \`composite_schema\` data-source.
+
+// Fields of the CleanUser.
+func (CleanUser) Fields() []ent.Field {
+    return []ent.Field{
+        field.String("name"),
+        field.String("public_info"),
+    }
+}
+```
+
+> **Key differences between tables and views:**
 > 
 > - Views are read-only, and therefore, no mutation builders are generated for them. If you want to define insertable/updatable views, define them as regular schemas and follow the guide below to configure their migrations.
 > - Unlike `ent.Schema`, `ent.View` does not have a default `ID` field. If you want to include an `id` field in your view, you can explicitly define it as a field.
@@ -74,8 +122,7 @@ Note, the `Create` / `Update` / `Delete` builders are not generated for `ent.Vie
 
 After defining the view schema, we need to inform Ent (and Atlas) about the SQL query that defines this view. If not configured, running an Ent query, such as the one defined above, will fail because there is no table named `clean_users`.
 
-> [!-secondary] -secondary
-> Atlas Guide
+> **Atlas Guide:**
 > 
 > The rest of the document, assumes you use Ent with [Atlas Pro](https://atlasgo.io/features#pro-plan), as Ent does not have migration support for views or other database objects besides tables and relationships. However, using Atlas or its Pro subscription is not mandatory. Ent does not require a specific migration engine, and as long as the view exists in the database, the client should be able to query it.
 
@@ -98,6 +145,8 @@ create "clean_users" view: pq: CREATE VIEW specifies more column names than colu
 
 Here's an example of a view defined along with its fields and its `SELECT` query:
 
+#### Builder Definition
+
 Using the `entsql.ViewFor` API, you can use a dialect-aware builder to define the view. Note that you can have multiple view definitions for different dialects, and Atlas will use the one that matches the dialect of the migration.
 
 ```markdown
@@ -112,6 +161,35 @@ func (CleanUser) Annotations() []schema.Annotation {
         entsql.ViewFor(dialect.Postgres, func(s *sql.Selector) {
             s.Select("id", "name", "public_info").From(sql.Table("users"))
         }),
+    }
+}
+
+// Fields of the CleanUser.
+func (CleanUser) Fields() []ent.Field {
+    return []ent.Field{
+        // Note, unlike real schemas (tables, defined with ent.Schema),
+        // the "id" field should be defined manually if needed.
+        field.Int("id"),
+        field.String("name"),
+        field.String("public_info"),
+    }
+}
+```
+
+#### Raw Definition
+
+Alternatively, you can use raw definitions to define the view. But note, this definition is skipped if the `ViewFor` annotation is defined for the dialect we generated migration to (Postgres in this case).
+
+```markdown
+// CleanUser represents a user without its PII field.
+type CleanUser struct {
+    ent.View
+}
+
+// Annotations of the CleanUser.
+func (CleanUser) Annotations() []schema.Annotation {
+    return []schema.Annotation{
+        entsql.View(\`SELECT id, name, public_info FROM users\`),
     }
 }
 
@@ -250,8 +328,7 @@ atlas migrate apply \
   --url "postgres://postgres:pass@localhost:5432/database?search_path=public&sslmode=disable"
 ```
 
-> [!-info] -info
-> Apply the Schema Directly on the Database
+> **Apply the Schema Directly on the Database:**
 > 
 > Sometimes, there is a need to apply the schema directly to the database without generating a migration file. For example, when experimenting with schema changes, spinning up a database for testing, etc. In such cases, you can use the command below to apply the schema directly to the database:
 > 

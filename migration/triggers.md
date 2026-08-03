@@ -2,16 +2,15 @@
 url: https://entgo.io/docs/migration/triggers
 title: "Triggers"
 description: ""
-access_date: 2026-08-03T17:26:33.758Z
-current_date: 2026-08-03T17:26:33.758Z
+access_date: 2026-08-03T18:12:34.399Z
+current_date: 2026-08-03T18:12:34.399Z
 ---
 
 Triggers are useful tools in relational databases that allow you to execute custom code when specific events occur on a table. For instance, triggers can automatically populate the audit log table whenever a new mutation is applied to a different table. This way we ensure that all changes (including those made by other applications) are meticulously recorded, enabling the enforcement on the database-level and reducing the need for additional code in the applications.
 
 This guide explains how to attach triggers to your Ent types (objects) and configure the schema migration to manage both the triggers and the Ent schema as a single migration unit using Atlas.
 
-> [!-info] -info
-> [Atlas Pro Feature](https://atlasgo.io/features#pro-plan)
+> **Atlas Pro Feature:**
 > 
 > Atlas support for [Triggers](https://atlasgo.io/atlas-schema/hcl#trigger) used in this guide is available exclusively to Pro users. To use this feature, run:
 > 
@@ -23,14 +22,37 @@ This guide explains how to attach triggers to your Ent types (objects) and confi
 
 To install the latest release of Atlas, simply run one of the following commands in your terminal, or check out the [Atlas website](https://atlasgo.io/getting-started#installation):
 
-- macOS + Linux
-- Homebrew
-- Docker
-- Windows
+#### macOS + Linux
 
 ```shell
 curl -sSf https://atlasgo.sh | sh
 ```
+
+#### Homebrew
+
+```shell
+brew install ariga/tap/atlas
+```
+
+#### Docker
+
+```shell
+docker pull arigaio/atlas
+docker run --rm arigaio/atlas --help
+```
+
+If the container needs access to the host network or a local directory, use the `--net=host` flag and mount the desired directory:
+
+```shell
+docker run --rm --net=host \
+  -v $(pwd)/migrations:/migrations \
+  arigaio/atlas migrate apply
+  --url "mysql://root:pass@:3306/test"
+```
+
+#### Windows
+
+Download the [latest release](https://release.ariga.io/atlas/atlas-windows-amd64-latest.exe) and move the atlas binary to a file location on your system PATH.
 
 ## Login to Atlas
 
@@ -236,8 +258,7 @@ atlas migrate apply \
   --url "postgres://postgres:pass@localhost:5432/database?search_path=public&sslmode=disable"
 ```
 
-> [!-info] -info
-> Apply the Schema Directly on the Database
+> **Apply the Schema Directly on the Database:**
 > 
 > Sometimes, there is a need to apply the schema directly to the database without generating a migration file. For example, when experimenting with schema changes, spinning up a database for testing, etc. In such cases, you can use the command below to apply the schema directly to the database:
 > 

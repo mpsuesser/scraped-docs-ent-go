@@ -2,8 +2,8 @@
 url: https://entgo.io/docs/getting-started
 title: "Getting Started"
 description: ""
-access_date: 2026-08-03T17:26:33.758Z
-current_date: 2026-08-03T17:26:33.758Z
+access_date: 2026-08-03T18:12:34.399Z
+current_date: 2026-08-03T18:12:34.399Z
 ---
 
 **ent** is a simple, yet powerful entity framework for Go, that makes it easy to build and maintain applications with large data-models and sticks with the following principles:
@@ -103,9 +103,7 @@ ent
 
 To get started, create a new `Client` to run schema migration and interact with your entities:
 
-- SQLite
-- PostgreSQL
-- MySQL (MariaDB)
+#### SQLite
 
 ```markdown
 package main
@@ -123,6 +121,60 @@ func main() {
     client, err := ent.Open("sqlite3", "file:ent?mode=memory&cache=shared&_fk=1")
     if err != nil {
         log.Fatalf("failed opening connection to sqlite: %v", err)
+    }
+    defer client.Close()
+    // Run the auto migration tool.
+    if err := client.Schema.Create(context.Background()); err != nil {
+        log.Fatalf("failed creating schema resources: %v", err)
+    }
+}
+```
+
+#### PostgreSQL
+
+```markdown
+package main
+
+import (
+    "context"
+    "log"
+
+    "entdemo/ent"
+
+    _ "github.com/lib/pq"
+)
+
+func main() {
+    client, err := ent.Open("postgres","host=<host> port=<port> user=<user> dbname=<database> password=<pass>")
+    if err != nil {
+        log.Fatalf("failed opening connection to postgres: %v", err)
+    }
+    defer client.Close()
+    // Run the auto migration tool.
+    if err := client.Schema.Create(context.Background()); err != nil {
+        log.Fatalf("failed creating schema resources: %v", err)
+    }
+}
+```
+
+#### MySQL (MariaDB)
+
+```markdown
+package main
+
+import (
+    "context"
+    "log"
+
+    "entdemo/ent"
+
+    _ "github.com/go-sql-driver/mysql"
+)
+
+func main() {
+    client, err := ent.Open("mysql", "<user>:<pass>@tcp(<host>:<port>)/<database>?parseTime=True")
+    if err != nil {
+        log.Fatalf("failed opening connection to mysql: %v", err)
     }
     defer client.Close()
     // Run the auto migration tool.
@@ -332,17 +384,39 @@ If you have reached this point, you have successfully executed the schema migrat
 
 To install the latest release of Atlas, simply run one of the following commands in your terminal, or check out the [Atlas website](https://atlasgo.io/getting-started#installation):
 
-- macOS + Linux
-- Homebrew
-- Docker
-- Windows
+#### macOS + Linux
 
 ```shell
 curl -sSf https://atlasgo.sh | sh
 ```
 
-- ERD Schema
-- SQL Schema
+#### Homebrew
+
+```shell
+brew install ariga/tap/atlas
+```
+
+#### Docker
+
+```shell
+docker pull arigaio/atlas
+docker run --rm arigaio/atlas --help
+```
+
+If the container needs access to the host network or a local directory, use the `--net=host` flag and mount the desired directory:
+
+```shell
+docker run --rm --net=host \
+  -v $(pwd)/migrations:/migrations \
+  arigaio/atlas migrate apply
+  --url "mysql://root:pass@:3306/test"
+```
+
+#### Windows
+
+Download the [latest release](https://release.ariga.io/atlas/atlas-windows-amd64-latest.exe) and move the atlas binary to a file location on your system PATH.
+
+#### ERD Schema
 
 #### Inspect The Ent Schema
 
@@ -356,6 +430,37 @@ atlas schema inspect \
 #### ERD and SQL Schema
 
 [![erd](https://atlasgo.io/uploads/erd-example.png)](https://gh.atlasgo.cloud/explore/40d83919)
+
+#### SQL Schema
+
+#### Inspect The Ent Schema
+
+```bash
+atlas schema inspect \
+  -u "ent://ent/schema" \
+  --dev-url "sqlite://file?mode=memory&_fk=1" \
+  --format '{{ sql . "  " }}'
+```
+
+#### SQL Output
+
+```sql
+-- Create "cars" table
+CREATE TABLE \`cars\` (
+  \`id\` integer NOT NULL PRIMARY KEY AUTOINCREMENT,
+  \`model\` text NOT NULL,
+  \`registered_at\` datetime NOT NULL,
+  \`user_cars\` integer NULL,
+  CONSTRAINT \`cars_users_cars\` FOREIGN KEY (\`user_cars\`) REFERENCES \`users\` (\`id\`) ON DELETE SET NULL
+);
+
+-- Create "users" table
+CREATE TABLE \`users\` (
+  \`id\` integer NOT NULL PRIMARY KEY AUTOINCREMENT,
+  \`age\` integer NOT NULL,
+  \`name\` text NOT NULL DEFAULT 'unknown'
+);
+```
 
 ## Create Your Second Edge
 
@@ -559,6 +664,8 @@ Unlike *Automatic Migrations*, the *Version Migrations* approach uses Atlas to a
 
 #### Generating migrations
 
+#### MySQL
+
 ```shell
 atlas migrate diff migration_name \
   --dir "file://ent/migrate/migrations" \
@@ -566,12 +673,65 @@ atlas migrate diff migration_name \
   --dev-url "docker://mysql/8/ent"
 ```
 
+#### MariaDB
+
+```shell
+atlas migrate diff migration_name \
+  --dir "file://ent/migrate/migrations" \
+  --to "ent://ent/schema" \
+  --dev-url "docker://mariadb/latest/test"
+```
+
+#### PostgreSQL
+
+```shell
+atlas migrate diff migration_name \
+  --dir "file://ent/migrate/migrations" \
+  --to "ent://ent/schema" \
+  --dev-url "docker://postgres/15/test?search_path=public"
+```
+
+#### SQLite
+
+```shell
+atlas migrate diff migration_name \
+  --dir "file://ent/migrate/migrations" \
+  --to "ent://ent/schema" \
+  --dev-url "sqlite://file?mode=memory&_fk=1"
+```
+
 #### Applying migrations
+
+#### MySQL
 
 ```shell
 atlas migrate apply \
   --dir "file://ent/migrate/migrations" \
   --url "mysql://root:pass@localhost:3306/example"
+```
+
+#### MariaDB
+
+```shell
+atlas migrate apply \
+  --dir "file://ent/migrate/migrations" \
+  --url "maria://root:pass@localhost:3306/example"
+```
+
+#### PostgreSQL
+
+```shell
+atlas migrate apply \
+  --dir "file://ent/migrate/migrations" \
+  --url "postgres://postgres:pass@localhost:5432/database?search_path=public&sslmode=disable"
+```
+
+#### SQLite
+
+```shell
+atlas migrate apply \
+  --dir "file://ent/migrate/migrations" \
+  --url "sqlite://file.db?_fk=1"
 ```
 
 Read more about this approach in the [Versioned Migrations](versioned-migrations.md) documentation.

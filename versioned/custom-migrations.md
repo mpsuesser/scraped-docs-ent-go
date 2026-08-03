@@ -2,12 +2,11 @@
 url: https://entgo.io/docs/versioned/custom-migrations
 title: "Custom Migrations"
 description: ""
-access_date: 2026-08-03T17:26:33.758Z
-current_date: 2026-08-03T17:26:33.758Z
+access_date: 2026-08-03T18:12:34.399Z
+current_date: 2026-08-03T18:12:34.399Z
 ---
 
-> [!-info] -info
-> Supporting repository
+> **Supporting repository:**
 > 
 > The change described in this section can be found in [PR #7](https://github.com/rotemtam/ent-versioned-migrations-demo/pull/7/files) in the supporting repository.
 

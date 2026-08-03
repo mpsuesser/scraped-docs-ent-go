@@ -2,8 +2,8 @@
 url: https://entgo.io/docs/tutorial-todo-gql-node
 title: "Tutorial Todo Gql Node"
 description: ""
-access_date: 2026-08-03T17:26:33.758Z
-current_date: 2026-08-03T17:26:33.758Z
+access_date: 2026-08-03T18:12:34.399Z
+current_date: 2026-08-03T18:12:34.399Z
 ---
 
 In this section, we continue the [GraphQL example](tutorial-todo-gql.md) by explaining how to implement the [Relay Node Interface](https://relay.dev/graphql/objectidentification.htm). If you're not familiar with the Node interface, read the following paragraphs that were taken from [relay.dev](https://relay.dev/graphql/objectidentification.htm#sel-DABDDBAADLA0Cl0c):

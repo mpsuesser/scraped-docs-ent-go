@@ -2,8 +2,8 @@
 url: https://entgo.io/docs/hooks
 title: "Hooks"
 description: ""
-access_date: 2026-08-03T17:26:33.758Z
-current_date: 2026-08-03T17:26:33.758Z
+access_date: 2026-08-03T18:12:34.399Z
+current_date: 2026-08-03T18:12:34.399Z
 ---
 
 The `Hooks` option allows adding custom logic before and after operations that mutate the graph.
@@ -22,8 +22,7 @@ There are 5 types of mutations:
 
 Each generated node type has its own type of mutation. For example, all [`User` builders](crud.md#create-an-entity), share the same generated `UserMutation` object. However, all builder types implement the generic [`ent.Mutation`](https://pkg.go.dev/entgo.io/ent?tab=doc#Mutation) interface.
 
-> [!-info] -info
-> Support For Database Triggers
+> **Support For Database Triggers:**
 > 
 > Unlike database triggers, hooks are executed at the application level, not the database level. If you need to execute specific logic on the database level, use database triggers as explained in the [schema migration guide](migration/triggers.md).
 
@@ -196,8 +195,7 @@ func (Card) Hooks() []ent.Hook {
 
 When using [**schema hooks**](#schema-hooks), there's a chance of a cyclic import between the schema package, and the generated ent package. To avoid this scenario, ent generates an `ent/runtime` package which is responsible for registering the schema-hooks at runtime.
 
-> [!-info] -info
-> info
+> **Info:**
 > 
 > Users **MUST** import the `ent/runtime` in order to register the schema hooks. The package can be imported in the `main` package (close to where the database driver is imported), or in the package that creates the `ent.Client`.
 > 

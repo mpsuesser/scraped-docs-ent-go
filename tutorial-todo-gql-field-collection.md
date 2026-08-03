@@ -2,8 +2,8 @@
 url: https://entgo.io/docs/tutorial-todo-gql-field-collection
 title: "Tutorial Todo Gql Field Collection"
 description: ""
-access_date: 2026-08-03T17:26:33.758Z
-current_date: 2026-08-03T17:26:33.758Z
+access_date: 2026-08-03T18:12:34.399Z
+current_date: 2026-08-03T18:12:34.399Z
 ---
 
 In this section, we continue our [GraphQL example](tutorial-todo-gql.md) by explaining how Ent implements [GraphQL Field Collection](https://spec.graphql.org/June2018/#sec-Field-Collection) for our GraphQL schema and solves the "N+1 Problem" in our resolvers.
@@ -70,7 +70,7 @@ func (r *queryResolver) Todos(ctx context.Context, after *ent.Cursor, first *int
 }
 ```
 
-We execute the GraphQL query from the [pagination tutorial](tutorial-todo-gql.md-paginate), and add the `parent` edge to the result:
+We execute the GraphQL query from the [pagination tutorial](tutorial-todo-gql-paginate.md), and add the `parent` edge to the result:
 
 ```graphql
 query {
@@ -161,8 +161,7 @@ field.String("name").
     )
 ```
 
-> [!-secondary] -secondary
-> note
+> **Note:**
 > 
 > If Ent does not know about the mapping between a resolver field and its underlying Ent field, and it encounters an unknown field in the query, it will query all fields from the database to ensure the resolver has the data it needs.
 

@@ -2,8 +2,8 @@
 url: https://entgo.io/docs/crud
 title: "Crud"
 description: ""
-access_date: 2026-08-03T17:26:33.758Z
-current_date: 2026-08-03T17:26:33.758Z
+access_date: 2026-08-03T18:12:34.399Z
+current_date: 2026-08-03T18:12:34.399Z
 ---
 
 As mentioned in the [introduction](code-gen.md) section, running `ent` on the schemas, will generate the following assets:
@@ -15,6 +15,8 @@ As mentioned in the [introduction](code-gen.md) section, running `ent` on the sc
 - A `migrate` package for SQL dialects. See [Migration](migrate.md) for more info.
 
 ## Create A New Client
+
+#### SQLite
 
 ```markdown
 package main
@@ -37,6 +39,79 @@ func main() {
     // Run the auto migration tool.
     if err := client.Schema.Create(context.Background()); err != nil {
         log.Fatalf("failed creating schema resources: %v", err)
+    }
+}
+```
+
+#### PostgreSQL
+
+```markdown
+package main
+
+import (
+    "context"
+    "log"
+
+    "entdemo/ent"
+
+    _ "github.com/lib/pq"
+)
+
+func main() {
+    client, err := ent.Open("postgres","host=<host> port=<port> user=<user> dbname=<database> password=<pass>")
+    if err != nil {
+        log.Fatalf("failed opening connection to postgres: %v", err)
+    }
+    defer client.Close()
+    // Run the auto migration tool.
+    if err := client.Schema.Create(context.Background()); err != nil {
+        log.Fatalf("failed creating schema resources: %v", err)
+    }
+}
+```
+
+#### MySQL
+
+```markdown
+package main
+
+import (
+    "context"
+    "log"
+
+    "entdemo/ent"
+
+    _ "github.com/go-sql-driver/mysql"
+)
+
+func main() {
+    client, err := ent.Open("mysql", "<user>:<pass>@tcp(<host>:<port>)/<database>?parseTime=True")
+    if err != nil {
+        log.Fatalf("failed opening connection to mysql: %v", err)
+    }
+    defer client.Close()
+    // Run the auto migration tool.
+    if err := client.Schema.Create(context.Background()); err != nil {
+        log.Fatalf("failed creating schema resources: %v", err)
+    }
+}
+```
+
+#### Gremlin (AWS Neptune)
+
+```markdown
+package main
+
+import (
+    "log"
+
+    "entdemo/ent"
+)
+
+func main() {
+    client, err := ent.Open("gremlin", "http://localhost:8182")
+    if err != nil {
+        log.Fatal(err)
     }
 }
 ```
@@ -110,9 +185,7 @@ pedro, err := client.Pet.   // PetClient.
 
 In some projects, the "update many" operation is not allowed and is blocked using hooks. However, there is still a need to update a single entity by its ID while ensuring it meets a specific condition. In this case, you can use the `Where` option as follows:
 
-- By ID
-- By Entity
-- Update Directly
+#### By ID
 
 ```markdown
 err := client.Todo.
@@ -123,6 +196,51 @@ err := client.Todo.
         todo.Version(currentVersion),
     ).
     Exec(ctx)
+switch {
+// If the entity does not meet a specific condition,
+// the operation will return an "ent.NotFoundError".
+case ent.IsNotFound(err):
+    fmt.Println("todo item was not found")
+// Any other error.
+case err != nil:
+    fmt.Println("update error:", err)
+}
+```
+
+#### By Entity
+
+```markdown
+err := client.Todo.
+    UpdateOne(node).
+    SetStatus(todo.StatusDone).
+    AddVersion(1).
+    Where(
+        todo.Version(currentVersion),
+    ).
+    Exec(ctx)
+switch {
+// If the entity does not meet a specific condition,
+// the operation will return an "ent.NotFoundError".
+case ent.IsNotFound(err):
+    fmt.Println("todo item was not found")
+// Any other error.
+case err != nil:
+    fmt.Println("update error:", err)
+}
+```
+
+#### Update Directly
+
+```markdown
+firstTodo, err = firstTodo.
+    Update().
+    SetStatus(todo.StatusDone).
+    AddVersion(1).
+    Where(
+        // Ensure the current version matches the one in the database.
+        todo.Version(firstTodo.Version),
+    ).
+    Save(ctx)
 switch {
 // If the entity does not meet a specific condition,
 // the operation will return an "ent.NotFoundError".
@@ -261,8 +379,7 @@ id, err := client.User.
 // INSERT INTO "users" (...) VALUES (...) ON CONFLICT WHERE ... DO UPDATE SET ... WHERE ...
 ```
 
-> [!-info] -info
-> info
+> **Info:**
 > 
 > Since the upsert API is implemented using the `ON CONFLICT` clause (and `ON DUPLICATE KEY` in MySQL), Ent executes only one statement to the database, and therefore, only create [hooks](hooks.md) are applied for such operations.
 

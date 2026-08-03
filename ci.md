@@ -2,8 +2,8 @@
 url: https://entgo.io/docs/ci
 title: "Ci"
 description: ""
-access_date: 2026-08-03T17:26:33.758Z
-current_date: 2026-08-03T17:26:33.758Z
+access_date: 2026-08-03T18:12:34.399Z
+current_date: 2026-08-03T18:12:34.399Z
 ---
 
 To ensure the quality of their software, teams often apply *Continuous Integration* workflows, commonly known as CI. With CI, teams continuously run a suite of automated verifications against every change to the code-base. During CI, teams may run many kinds of verifications:
@@ -27,8 +27,7 @@ Ent heavily relies on code generation. In our experience, generated code should 
 
 If you're using GitHub for source control, it's easy to verify that all generated files are checked in with the `ent/contrib/ci` GitHub Action. Otherwise, we supply a simple bash script that you can integrate in your existing CI flow.
 
-- GitHub Action
-- Bash
+#### GitHub Action
 
 Simply add a file named \`.github/workflows/ent-ci.yaml\` in your repository:
 ```yaml
@@ -53,6 +52,18 @@ jobs:
       - uses: ent/contrib/ci@master
 ```
 
+#### Bash
+
+```bash
+go generate ./...
+status=$(git status --porcelain)
+if [ -n "$status" ]; then
+    echo "you need to run 'go generate ./...' and commit the changes"
+    echo "$status"
+    exit 1
+fi
+```
+
 ## Lint migration files
 
 Changes to your project's Ent schema almost always result in a modification of your database. If you are using [Versioned Migrations](versioned-migrations.md) to manage changes to your database schema, you can run [migration linting](https://atlasgo.io/versioned/lint) as part of your continuous integration flow. This is done for multiple reasons:
@@ -66,10 +77,7 @@ If you're using GitHub, you can use the [Official Atlas Action](https://github.c
 
 Add `.github/workflows/atlas-ci.yaml` to your repo with the following contents:
 
-- MySQL
-- MariaDB
-- PostgreSQL
-- SQLite
+#### MySQL
 
 ```yaml
 name: Atlas CI
@@ -111,6 +119,123 @@ jobs:
           dir: 'file://ent/migrate/migrations'
           dir-name: 'my-project' # The name of the project in Atlas Cloud
           dev-url: "mysql://root:pass@localhost:3306/dev"
+```
+
+#### MariaDB
+
+```yaml
+name: Atlas CI
+on:
+  # Run whenever code is changed in the master branch,
+  # change this to your root branch.
+  push:
+    branches:
+      - master
+  # Run on PRs where something changed under the \`ent/migrate/migrations/\` directory.
+  pull_request:
+    paths:
+      - 'ent/migrate/migrations/*'
+jobs:
+  lint:
+    services:
+      # Spin up a maria:11 container to be used as the dev-database for analysis.
+      mariadb:
+        image: mariadb:11
+        env:
+          MYSQL_DATABASE: dev
+          MYSQL_ROOT_PASSWORD: pass
+        ports:
+          - "3306:3306"
+        options: >-
+          --health-cmd "healthcheck.sh --su-mysql --connect --innodb_initialized"
+          --health-interval 10s
+          --health-start-period 10s
+          --health-timeout 5s
+          --health-retries 10
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      - uses: ariga/setup-atlas@v0
+        with:
+          cloud-token: ${{ secrets.ATLAS_CLOUD_TOKEN }}
+      - uses: ariga/atlas-action/migrate/lint@v1
+        with:
+          dir: 'file://ent/migrate/migrations'
+          dir-name: 'my-project' # The name of the project in Atlas Cloud
+          dev-url: "maria://root:pass@localhost:3306/dev"
+```
+
+#### PostgreSQL
+
+```yaml
+name: Atlas CI
+on:
+  # Run whenever code is changed in the master branch,
+  # change this to your root branch.
+  push:
+    branches:
+      - master
+  # Run on PRs where something changed under the \`ent/migrate/migrations/\` directory.
+  pull_request:
+    paths:
+      - 'ent/migrate/migrations/*'
+jobs:
+  lint:
+    services:
+      # Spin up a postgres:15 container to be used as the dev-database for analysis.
+      postgres:
+        image: postgres:15
+        env:
+          POSTGRES_DB: dev
+          POSTGRES_PASSWORD: pass
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-start-period 10s
+          --health-timeout 5s
+          --health-retries 5
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      - uses: ariga/setup-atlas@v0
+        with:
+          cloud-token: ${{ secrets.ATLAS_CLOUD_TOKEN }}
+      - uses: ariga/atlas-action/migrate/lint@v1
+        with:
+          dir: 'file://ent/migrate/migrations'
+          dir-name: 'my-project' # The name of the project in Atlas Cloud
+          dev-url: postgres://postgres:pass@localhost:5432/dev?sslmode=disable
+```
+
+#### SQLite
+
+```yaml
+name: Atlas CI
+on:
+  # Run whenever code is changed in the master branch,
+  # change this to your root branch.
+  push:
+    branches:
+      - master
+  # Run on PRs where something changed under the \`ent/migrate/migrations/\` directory.
+  pull_request:
+    paths:
+      - 'ent/migrate/migrations/*'
+jobs:
+  lint:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      - uses: ariga/setup-atlas@v0
+        with:
+          cloud-token: ${{ secrets.ATLAS_CLOUD_TOKEN }}
+      - uses: ariga/atlas-action/migrate/lint@v1
+        with:
+          dir: 'file://ent/migrate/migrations'
+          dir-name: 'my-project' # The name of the project in Atlas Cloud
+          dev-url: sqlite://file?mode=memory&_fk=1
 ```
 
 Notice that running `atlas migrate lint` requires a clean [dev-database](https://atlasgo.io/concepts/dev-database) which is provided by the `services` block in the example code above.
