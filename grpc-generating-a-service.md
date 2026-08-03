@@ -2,8 +2,8 @@
 url: https://entgo.io/docs/grpc-generating-a-service
 title: "Grpc Generating A Service"
 description: ""
-access_date: 2026-08-03T18:54:51.647Z
-current_date: 2026-08-03T18:54:51.647Z
+access_date: 2026-08-03T19:00:49.651Z
+current_date: 2026-08-03T19:00:49.651Z
 ---
 
 Generating Protobuf structs generated from our `ent.Schema` can be useful, but what we're really interested in is getting an actual server that can create, read, update, and delete entities from an actual database. To do that, we need to update just one line of code! When we annotate a schema with `entproto.Service`, we tell the `entproto` code-gen that we are interested in generating a gRPC service definition, from the `protoc-gen-entgrpc` will read our definition and generate a service implementation. Edit `ent/schema/user.go` and modify the schema's `Annotations`:

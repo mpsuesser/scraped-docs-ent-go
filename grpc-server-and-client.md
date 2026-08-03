@@ -2,8 +2,8 @@
 url: https://entgo.io/docs/grpc-server-and-client
 title: "Grpc Server And Client"
 description: ""
-access_date: 2026-08-03T18:54:51.647Z
-current_date: 2026-08-03T18:54:51.647Z
+access_date: 2026-08-03T19:00:49.651Z
+current_date: 2026-08-03T19:00:49.651Z
 ---
 
 Getting an automatically generated gRPC service definition is super cool, but we still need to register it to a concrete gRPC server, that listens on some TCP port for traffic and is able to respond to RPC calls.

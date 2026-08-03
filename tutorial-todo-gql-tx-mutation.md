@@ -2,8 +2,8 @@
 url: https://entgo.io/docs/tutorial-todo-gql-tx-mutation
 title: "Tutorial Todo Gql Tx Mutation"
 description: ""
-access_date: 2026-08-03T18:54:51.647Z
-current_date: 2026-08-03T18:54:51.647Z
+access_date: 2026-08-03T19:00:49.651Z
+current_date: 2026-08-03T19:00:49.651Z
 ---
 
 In this section, we continue the [GraphQL example](tutorial-todo-gql.md) by explaining how to set our GraphQL mutations to be transactional. That means, to automatically wrap our GraphQL mutations with a database transaction and either commit at the end, or rollback the transaction in case of a GraphQL error.
